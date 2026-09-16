@@ -1,0 +1,9 @@
+one:
+  appointment: one
+  service: one
+  price_at_booking: 4500.00
+
+two:
+  appointment: two
+  service: two
+  price_at_booking: 3200.00

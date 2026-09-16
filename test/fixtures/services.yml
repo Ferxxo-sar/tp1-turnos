@@ -1,0 +1,13 @@
+one:
+  name: Corte de pelo
+  description: Corte y peinado.
+  duration_minutes: 30
+  price: 4500.00
+  category: one
+
+two:
+  name: Manicura
+  description: Manicura tradicional.
+  duration_minutes: 45
+  price: 3200.00
+  category: two

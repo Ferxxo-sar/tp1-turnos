@@ -1,0 +1,13 @@
+one:
+  name: Cliente Uno
+  email: cliente1@example.com
+  password_digest: <%= BCrypt::Password.create("password123") %>
+  phone: "1122334455"
+  api_token: token-cliente-uno
+
+two:
+  name: Cliente Dos
+  email: cliente2@example.com
+  password_digest: <%= BCrypt::Password.create("password123") %>
+  phone: "1155667788"
+  api_token: token-cliente-dos
