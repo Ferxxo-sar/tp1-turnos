@@ -1,0 +1,39 @@
+<%= form_with model: [ :admin, service ], class: "form card" do |f| %>
+  <%= error_messages_for(service) %>
+
+  <div class="form-row">
+    <div class="field">
+      <%= f.label :name %>
+      <%= f.text_field :name, required: true %>
+    </div>
+    <div class="field">
+      <%= f.label :category_id %>
+      <%= f.collection_select :category_id, @categories, :id, :name, { prompt: "Elegí una categoría" }, required: true %>
+      <% if @categories.empty? %>
+        <span class="hint">Primero <%= link_to "creá una categoría", new_admin_category_path %>.</span>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <%= f.label :duration_minutes, "Duración (minutos)" %>
+      <%= f.number_field :duration_minutes, min: 1, step: 5, required: true %>
+    </div>
+    <div class="field">
+      <%= f.label :price, "Precio ($)" %>
+      <%= f.number_field :price, min: 0, step: "0.01", required: true %>
+      <span class="hint">Cambiar el precio no afecta a los turnos ya reservados.</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :description %>
+    <%= f.text_area :description %>
+  </div>
+
+  <div class="form-actions">
+    <%= link_to "Cancelar", admin_services_path, class: "btn secondary" %>
+    <%= f.submit "Guardar", class: "btn" %>
+  </div>
+<% end %>

@@ -1,0 +1,28 @@
+<% content_for :title, "Profesionales" %>
+
+<div class="page-head">
+  <h1>Profesionales</h1>
+  <div class="actions"><%= link_to "+ Nuevo profesional", new_admin_stylist_path, class: "btn" %></div>
+</div>
+
+<% if @stylists.any? %>
+  <div class="grid grid-3">
+    <% @stylists.each do |stylist| %>
+      <article class="card person-card">
+        <div class="person">
+          <%= avatar_for(stylist) %>
+          <div>
+            <h3 style="margin:0"><%= link_to stylist.name, admin_stylist_path(stylist) %></h3>
+            <span class="muted small"><%= stylist.specialty %></span>
+          </div>
+        </div>
+        <div class="actions button-row">
+          <%= link_to "Agenda", admin_stylist_path(stylist), class: "btn sm secondary" %>
+          <%= link_to "Editar", edit_admin_stylist_path(stylist), class: "btn sm secondary" %>
+        </div>
+      </article>
+    <% end %>
+  </div>
+<% else %>
+  <div class="card empty">Todavía no hay profesionales. <%= link_to "Cargar el primero", new_admin_stylist_path %>.</div>
+<% end %>

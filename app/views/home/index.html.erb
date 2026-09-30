@@ -1,0 +1,83 @@
+<% content_for :hero do %>
+  <section class="hero">
+    <div class="container">
+      <span class="tag">Reservas online · 24/7</span>
+      <h1 style="margin-top:12px">Reservá tu turno en segundos.</h1>
+      <p>Elegí el servicio, el profesional y el horario que te quede cómodo. Te confirmamos por email y podés cancelar cuando quieras.</p>
+      <div class="actions">
+        <%= link_to "Reservar turno", new_appointment_path, class: "btn lg" %>
+        <% if client_signed_in? %>
+          <%= link_to "Ver mis turnos", appointments_path, class: "btn lg secondary" %>
+        <% else %>
+          <%= link_to "Ya tengo cuenta", login_path, class: "btn lg secondary" %>
+        <% end %>
+      </div>
+    </div>
+  </section>
+<% end %>
+
+<section class="section" style="margin-top:0">
+  <div class="section-head">
+    <div>
+      <h2>Nuestro equipo</h2>
+      <p class="muted">Elegí con quién querés atenderte y mirá sus horarios libres.</p>
+    </div>
+  </div>
+
+  <% if @stylists.any? %>
+    <div class="grid grid-3">
+      <% @stylists.each do |stylist| %>
+        <article class="card person-card">
+          <div class="person">
+            <%= avatar_for(stylist) %>
+            <div>
+              <h3 style="margin:0"><%= stylist.name %></h3>
+              <span class="muted small"><%= stylist.specialty %></span>
+            </div>
+          </div>
+          <% if stylist.bio.present? %>
+            <p class="muted small"><%= truncate(stylist.bio, length: 120) %></p>
+          <% end %>
+          <div class="actions">
+            <%= link_to "Ver horarios", public_stylist_path(stylist), class: "btn secondary block" %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="card empty">Todavía no hay profesionales cargados.</div>
+  <% end %>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <div>
+      <h2>Servicios y precios</h2>
+      <p class="muted">Podés combinar varios servicios en un mismo turno.</p>
+    </div>
+  </div>
+
+  <% if @categories.any? %>
+    <div class="grid grid-2">
+      <% @categories.each do |category| %>
+        <% next if category.services.empty? %>
+        <article class="card">
+          <h3><%= category.name %></h3>
+          <ul class="service-list">
+            <% category.services.sort_by(&:name).each do |service| %>
+              <li>
+                <div>
+                  <strong><%= service.name %></strong>
+                  <div class="muted small"><%= duration(service.duration_minutes) %><%= " · #{service.description}" if service.description.present? %></div>
+                </div>
+                <span class="price"><%= money(service.price) %></span>
+              </li>
+            <% end %>
+          </ul>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="card empty">Todavía no hay servicios cargados.</div>
+  <% end %>
+</section>

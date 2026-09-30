@@ -1,0 +1,31 @@
+<% content_for :title, "Mis turnos" %>
+
+<div class="page-head">
+  <div>
+    <h1>Mis turnos</h1>
+    <p class="muted" style="margin:0">Hola, <%= current_client.name %>.</p>
+  </div>
+  <div class="actions">
+    <%= link_to "+ Reservar turno", new_appointment_path, class: "btn" %>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><h2>Próximos</h2></div>
+  <% if @upcoming.any? %>
+    <%= render partial: "appointment_row", collection: @upcoming, as: :appointment %>
+  <% else %>
+    <div class="empty">
+      <div class="icon">🗓️</div>
+      <p>No tenés turnos próximos.</p>
+      <%= link_to "Reservar ahora", new_appointment_path, class: "btn" %>
+    </div>
+  <% end %>
+</div>
+
+<% if @history.any? %>
+  <div class="card">
+    <div class="card-title"><h2>Historial</h2></div>
+    <%= render partial: "appointment_row", collection: @history, as: :appointment %>
+  </div>
+<% end %>

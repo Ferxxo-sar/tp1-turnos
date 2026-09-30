@@ -7,4 +7,6 @@ class Service < ApplicationRecord
   validates :name, presence: true
   validates :duration_minutes, numericality: { only_integer: true, greater_than: 0 }
   validates :price, numericality: { greater_than_or_equal_to: 0 }
+
+  scope :alphabetical, -> { order(:name) }
 end

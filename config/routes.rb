@@ -1,14 +1,48 @@
 Rails.application.routes.draw do
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
-  # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
-  # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  # Portal público y de clientes
+  root "home#index"
+  get "profesionales/:id" => "home#stylist", as: :public_stylist
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  get "ingresar" => "sessions#new", as: :login
+  post "ingresar" => "sessions#create"
+  delete "salir" => "sessions#destroy", as: :logout
+  get "registro" => "registrations#new", as: :signup
+  post "registro" => "registrations#create"
+
+  resources :appointments, path: "mis-turnos", only: %i[index new create show] do
+    patch :cancel, on: :member
+  end
+
+  # Back-office
+  namespace :admin do
+    root "dashboard#index"
+    get "ingresar" => "sessions#new", as: :login
+    post "ingresar" => "sessions#create"
+    delete "salir" => "sessions#destroy", as: :logout
+
+    resources :appointments, path: "turnos"
+    resources :stylists, path: "profesionales"
+    resources :services, path: "servicios", except: :show
+    resources :categories, path: "categorias", except: :show
+    resources :clients, path: "clientes", only: %i[index show]
+  end
+
+  # API JSON
+  namespace :api do
+    namespace :v1 do
+      post "login" => "sessions#create"
+      delete "logout" => "sessions#destroy"
+
+      resources :categories, only: %i[index show]
+      resources :services, only: %i[index show]
+      resources :stylists, only: %i[index show] do
+        get :availability, on: :member
+      end
+      resources :appointments, only: %i[index show create] do
+        patch :cancel, on: :member
+      end
+    end
+  end
 end

@@ -34,6 +34,9 @@ Rails.application.configure do
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
 
+  # Los emails no se envían: se guardan en tmp/mails para poder revisarlos.
+  config.action_mailer.delivery_method = :file
+
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
 

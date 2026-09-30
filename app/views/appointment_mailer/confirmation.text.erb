@@ -1,0 +1,14 @@
+¡Hola, <%= @client.name %>!
+
+Tu turno en <%= @business_name %> quedó reservado.
+
+Fecha: <%= l(@appointment.scheduled_at, format: :long) %>
+Profesional: <%= @appointment.stylist.name %>
+Estado: <%= @appointment.status_label %>
+
+<% @appointment.appointment_services.each do |item| -%>
+- <%= item.service.name %>: <%= number_to_currency(item.price_at_booking) %>
+<% end -%>
+Total: <%= number_to_currency(@appointment.total) %>
+
+Ver o cancelar tu turno: <%= appointment_url(@appointment) %>

@@ -1,0 +1,11 @@
+<%= form_with model: [ :admin, category ], class: "form card", style: "max-width:520px" do |f| %>
+  <%= error_messages_for(category) %>
+  <div class="field">
+    <%= f.label :name %>
+    <%= f.text_field :name, required: true, autofocus: true %>
+  </div>
+  <div class="form-actions">
+    <%= link_to "Cancelar", admin_categories_path, class: "btn secondary" %>
+    <%= f.submit "Guardar", class: "btn" %>
+  </div>
+<% end %>

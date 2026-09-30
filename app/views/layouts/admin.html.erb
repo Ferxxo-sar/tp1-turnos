@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title><%= [ content_for(:title), "Admin", business_name ].compact.join(" · ") %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <% if current_admin %>
+      <div class="admin-shell">
+        <aside class="sidebar">
+          <%= link_to admin_root_path, class: "brand" do %>
+            <span class="brand-mark">◷</span> <span>Admin</span>
+          <% end %>
+          <nav>
+            <%= nav_link "Inicio", admin_root_path, exact: true %>
+            <%= nav_link "Turnos", admin_appointments_path %>
+            <%= nav_link "Profesionales", admin_stylists_path %>
+            <%= nav_link "Servicios", admin_services_path %>
+            <%= nav_link "Categorías", admin_categories_path %>
+            <%= nav_link "Clientes", admin_clients_path %>
+          </nav>
+          <div class="me">
+            <strong><%= current_admin.name %></strong>
+            <span class="muted"><%= current_admin.email %></span>
+            <div class="button-row" style="margin-top:8px">
+              <%= link_to "Ver sitio", root_path, class: "btn sm secondary" %>
+              <%= button_to "Salir", admin_logout_path, method: :delete, class: "sm secondary" %>
+            </div>
+          </div>
+        </aside>
+        <main class="admin-main">
+          <%= render "shared/flash" %>
+          <%= yield %>
+        </main>
+      </div>
+    <% else %>
+      <main class="auth-page">
+        <div style="width:min(420px,100%)">
+          <%= render "shared/flash" %>
+          <%= yield %>
+        </div>
+      </main>
+    <% end %>
+  </body>
+</html>

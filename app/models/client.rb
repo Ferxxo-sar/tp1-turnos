@@ -1,6 +1,8 @@
 class Client < ApplicationRecord
   has_secure_password
 
+  normalizes :email, with: ->(email) { email.strip.downcase }
+
   has_many :appointments, dependent: :destroy
 
   validates :name, presence: true

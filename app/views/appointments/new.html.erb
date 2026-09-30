@@ -1,0 +1,98 @@
+<% content_for :title, "Reservar turno" %>
+
+<div class="page-head">
+  <div>
+    <h1>Reservar turno</h1>
+    <p class="muted" style="margin:0">Elegí servicios, profesional y horario.</p>
+  </div>
+</div>
+
+<%= form_with model: @appointment, url: appointments_path, class: "layout-2-1",
+      data: { controller: "booking", booking_availability_url_value: "/api/v1/stylists/:id/availability" } do |f| %>
+  <div class="form">
+    <%= error_messages_for(@appointment) %>
+
+    <div class="card">
+      <fieldset>
+        <legend>1. ¿Qué te querés hacer?</legend>
+        <% @categories.each do |category| %>
+          <% next if category.services.empty? %>
+          <p class="muted small" style="margin:12px 0 6px"><%= category.name %></p>
+          <div class="check-grid">
+            <% category.services.sort_by(&:name).each do |service| %>
+              <label class="check-card">
+                <%= check_box_tag "appointment[service_ids][]", service.id, @selected_service_ids.include?(service.id),
+                      id: "service_#{service.id}",
+                      data: { booking_target: "service", action: "booking#updateSummary",
+                              name: service.name, price: service.price.to_f, minutes: service.duration_minutes } %>
+                <span>
+                  <strong><%= service.name %></strong>
+                  <span class="meta"><%= duration(service.duration_minutes) %> · <%= money(service.price) %></span>
+                </span>
+              </label>
+            <% end %>
+          </div>
+        <% end %>
+      </fieldset>
+    </div>
+
+    <div class="card">
+      <fieldset>
+        <legend>2. ¿Con quién y cuándo?</legend>
+        <div class="form-row">
+          <div class="field">
+            <%= f.label :stylist_id %>
+            <%= f.collection_select :stylist_id, @stylists, :id, :name, { prompt: "Elegí un profesional" },
+                  required: true, data: { booking_target: "stylist", action: "booking#loadSlots" } %>
+          </div>
+          <div class="field">
+            <%= label_tag "appointment_date", "Fecha" %>
+            <%= date_field_tag "appointment[date]", @date, id: "appointment_date", min: Date.current.iso8601, required: true,
+                  data: { booking_target: "date", action: "booking#loadSlots" } %>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:16px">
+          <span class="label">Horario</span>
+          <div data-booking-target="slots">
+            <% if @appointment.stylist.nil? %>
+              <div class="empty-slots">Elegí un profesional y una fecha para ver los horarios libres.</div>
+            <% elsif @slots.empty? %>
+              <div class="empty-slots">No hay horarios disponibles para ese día.</div>
+            <% else %>
+              <div class="slots">
+                <% @slots.each do |slot| %>
+                  <% hour = l(slot, format: :hour) %>
+                  <label class="slot">
+                    <%= radio_button_tag "appointment[time]", hour, @selected_time == hour, required: true,
+                          data: { action: "booking#updateSummary" } %>
+                    <span><%= hour %></span>
+                  </label>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <%= f.label :notes, "Notas (opcional)" %>
+        <%= f.text_area :notes, placeholder: "Algo que el profesional deba saber" %>
+      </div>
+    </div>
+  </div>
+
+  <aside class="card summary">
+    <h3>Resumen</h3>
+    <dl>
+      <dt>Profesional</dt><dd data-booking-target="stylistName">—</dd>
+      <dt>Fecha</dt><dd data-booking-target="when">—</dd>
+      <dt>Duración</dt><dd data-booking-target="duration">—</dd>
+    </dl>
+    <ul class="service-list small" data-booking-target="serviceList"></ul>
+    <div class="total"><span>Total</span><span data-booking-target="total">$ 0,00</span></div>
+    <%= f.submit "Confirmar reserva", class: "btn block lg" %>
+  </aside>
+<% end %>

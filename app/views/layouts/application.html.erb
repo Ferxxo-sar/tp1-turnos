@@ -1,29 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
-    <title><%= content_for(:title) || "Tp1 Programacion" %></title>
+    <title><%= [ content_for(:title), business_name ].compact.join(" · ") %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Tp1 Programacion">
+    <meta name="application-name" content="<%= business_name %>">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
-    <%= yield %>
+    <header class="topbar">
+      <div class="container">
+        <%= link_to root_path, class: "brand" do %>
+          <span class="brand-mark">◷</span> <%= business_name %>
+        <% end %>
+        <nav class="nav">
+          <%= nav_link "Inicio", root_path, exact: true %>
+          <% if client_signed_in? %>
+            <%= nav_link "Mis turnos", appointments_path %>
+            <%= link_to "Reservar", new_appointment_path, class: "btn sm" %>
+            <%= button_to "Salir", logout_path, method: :delete, class: "link", form: { style: "display:inline" } %>
+          <% else %>
+            <%= nav_link "Ingresar", login_path %>
+            <%= link_to "Crear cuenta", signup_path, class: "btn sm" %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+
+    <%= yield :hero %>
+
+    <main class="page">
+      <div class="container">
+        <%= render "shared/flash" %>
+        <%= yield %>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container button-row" style="justify-content: space-between">
+        <span>© <%= Date.current.year %> <%= business_name %></span>
+        <%= link_to "Acceso administración", admin_root_path, class: "muted" %>
+      </div>
+    </footer>
   </body>
 </html>

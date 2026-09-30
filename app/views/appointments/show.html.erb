@@ -1,0 +1,43 @@
+<% content_for :title, "Turno" %>
+
+<p><%= link_to "← Mis turnos", appointments_path %></p>
+
+<div class="layout-2-1">
+  <div class="card">
+    <div class="card-title">
+      <h1 style="margin:0">Tu turno</h1>
+      <%= status_badge(@appointment.status) %>
+    </div>
+
+    <dl class="detail">
+      <dt>Fecha</dt>
+      <dd><%= l(@appointment.scheduled_at, format: :long).capitalize %></dd>
+      <dt>Duración estimada</dt>
+      <dd><%= duration(@appointment.duration_minutes) %> (hasta las <%= l(@appointment.ends_at, format: :hour) %>)</dd>
+      <dt>Profesional</dt>
+      <dd><%= @appointment.stylist.name %> · <span class="muted"><%= @appointment.stylist.specialty %></span></dd>
+      <% if @appointment.notes.present? %>
+        <dt>Notas</dt>
+        <dd><%= @appointment.notes %></dd>
+      <% end %>
+    </dl>
+
+    <% if @appointment.cancellable? %>
+      <div class="form-actions" style="margin-top:20px">
+        <%= button_to "Cancelar turno", cancel_appointment_path(@appointment), method: :patch, class: "danger",
+              form: { data: { turbo_confirm: "¿Seguro que querés cancelar este turno?" } } %>
+      </div>
+    <% end %>
+  </div>
+
+  <aside class="card summary">
+    <h3>Servicios</h3>
+    <ul class="service-list">
+      <% @appointment.appointment_services.each do |item| %>
+        <li><span><%= item.service.name %></span><span class="price"><%= money(item.price_at_booking) %></span></li>
+      <% end %>
+    </ul>
+    <div class="total" style="margin-top:8px"><span>Total</span><span><%= money(@appointment.total) %></span></div>
+    <p class="hint" style="margin:0">Se respeta el precio vigente al momento de reservar.</p>
+  </aside>
+</div>

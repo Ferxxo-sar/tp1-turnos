@@ -1,0 +1,37 @@
+<%= form_with model: [ :admin, stylist ], class: "form card" do |f| %>
+  <%= error_messages_for(stylist) %>
+
+  <div class="form-row">
+    <div class="field">
+      <%= f.label :name %>
+      <%= f.text_field :name, required: true %>
+    </div>
+    <div class="field">
+      <%= f.label :specialty %>
+      <%= f.text_field :specialty, required: true, placeholder: "Ej. Colorista, Kinesiología, Mecánica…" %>
+    </div>
+  </div>
+
+  <div class="field">
+    <%= f.label :bio %>
+    <%= f.text_area :bio %>
+  </div>
+
+  <div class="field">
+    <%= f.label :photo %>
+    <div class="person">
+      <% if stylist.photo.attached? && stylist.photo.persisted? %>
+        <%= avatar_for(stylist) %>
+      <% end %>
+      <%= f.file_field :photo, accept: "image/*" %>
+    </div>
+    <% if stylist.persisted? && stylist.photo.attached? %>
+      <label class="small"><%= check_box_tag :remove_photo, "1" %> Quitar la foto actual</label>
+    <% end %>
+  </div>
+
+  <div class="form-actions">
+    <%= link_to "Cancelar", stylist.persisted? ? admin_stylist_path(stylist) : admin_stylists_path, class: "btn secondary" %>
+    <%= f.submit "Guardar", class: "btn" %>
+  </div>
+<% end %>

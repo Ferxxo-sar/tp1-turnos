@@ -1,0 +1,14 @@
+<div class="appt">
+  <%= date_chip(appointment.scheduled_at) %>
+  <div class="info">
+    <p><strong><%= l(appointment.scheduled_at, format: :long).capitalize %></strong></p>
+    <p class="muted small">
+      con <%= appointment.stylist.name %> ·
+      <%= appointment.appointment_services.map { |item| item.service.name }.to_sentence.presence || "Sin servicios" %>
+    </p>
+  </div>
+  <div class="right">
+    <%= status_badge(appointment.status) %>
+    <div class="small" style="margin-top:6px"><%= link_to "Ver detalle", appointment_path(appointment) %></div>
+  </div>
+</div>
