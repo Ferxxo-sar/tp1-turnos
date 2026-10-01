@@ -12,24 +12,43 @@ La definición funcional completa está en [DEFINICION.md](DEFINICION.md).
 
 ## Estado actual
 
-> **Importante para quien arranque el frontend:** la API todavía no está implementada.
-> No existe ningún endpoint al que pegarle en este momento.
-
 | Parte | Estado |
 |---|---|
 | Modelos, migraciones y validaciones | Implementado |
-| Tests de modelos | Implementado |
-| Rutas (`config/routes.rb`) | Vacío |
-| Controllers de API | No existen |
-| Back-office `/admin` | No existe |
-| Autenticación (login admin / token cliente) | No existe |
-| Datos de prueba (`db/seeds.rb`) | Vacío |
-| Active Storage (foto de estilista) | Declarado en el modelo, sin endpoint |
-| Action Mailer (email de confirmación) | No existe |
+| Portal de clientes (registro, login, reserva con horarios libres, mis turnos, cancelar) | Implementado |
+| Back-office `/admin` (dashboard, CRUD de turnos, profesionales, servicios, categorías, clientes) | Implementado |
+| API `/api/v1` con login por token | Implementado |
+| Active Storage (foto del profesional) | Implementado |
+| Action Mailer (email de confirmación al reservar) | Implementado |
+| Seeds (`db/seeds.rb`) | Implementado |
+| Tests de modelos, integración, API y mailer | Implementado |
 
-Lo único que se puede usar hoy es la consola de Rails (`bin/rails console`) para crear y consultar
-registros. La sección [Modelo de datos](#modelo-de-datos) describe las estructuras que la API va a
-exponer cuando exista, y sirve para ir diseñando las pantallas.
+La app es genérica: el nombre del negocio se configura con la variable de entorno `BUSINESS_NAME`
+(por defecto "Estudio Turnos") y en el front el estilista se muestra como "Profesional".
+
+### Usuarios de prueba (seeds)
+
+| Rol | Email | Contraseña | URL |
+|---|---|---|---|
+| Admin | `admin@turnos.test` | `admin1234` | `/admin` |
+| Cliente | `juan@mail.com` | `cliente123` | `/ingresar` |
+
+### Pantallas
+
+| URL | Descripción |
+|---|---|
+| `/` | Home: equipo de profesionales y servicios con precios |
+| `/profesionales/:id` | Horarios libres de un profesional por día |
+| `/registro`, `/ingresar` | Alta y login de clientes |
+| `/mis-turnos` | Próximos turnos e historial del cliente |
+| `/mis-turnos/new` | Reserva: servicios, profesional, fecha y horario (se cargan desde la API) |
+| `/admin` | Dashboard: agenda del día, pendientes, métricas |
+| `/admin/turnos` | Turnos con filtros por fecha, profesional y estado |
+
+Horario de atención: lunes a sábado de 9 a 19, en bloques de 30 minutos (`Stylist::OPENING_HOUR`,
+`CLOSING_HOUR`, `SLOT_MINUTES`).
+
+En desarrollo los emails no se envían: se guardan en `tmp/mails/`.
 
 ---
 
@@ -52,7 +71,7 @@ Requisitos: Ruby 3.3.12 instalado (la versión está fijada en `.ruby-version`).
 # 1. Instalar dependencias
 bundle install
 
-# 2. Crear la base de datos y aplicar migraciones
+# 2. Crear la base de datos, aplicar migraciones y cargar los datos de prueba
 bin/rails db:setup
 
 # 3. Levantar el servidor
@@ -70,7 +89,7 @@ Cualquier otra URL va a dar `404` hasta que se definan las rutas.
 bin/rails console
 ```
 
-Ejemplo para crear datos a mano mientras no haya seeds:
+Ejemplo para crear datos a mano:
 
 ```ruby
 categoria = Category.create!(name: "Cabello")
@@ -227,31 +246,33 @@ de los servicios.
 
 ---
 
-## API prevista
+## API
 
-> Nada de esto está implementado todavía. Es el diseño acordado en `DEFINICION.md` y está sujeto a
-> cambios. Conviene confirmar el contrato exacto antes de escribir el cliente HTTP.
-
-Base: `/api/v1`
-
-Autenticación por token. El login devuelve el `api_token` del cliente, que se manda en los requests
-siguientes mediante el header:
-
-```
-Authorization: Bearer <api_token>
-```
+Base: `/api/v1`. Autenticación por token: el login devuelve el `api_token`, que se manda en el header
+`Authorization: Bearer <api_token>`.
 
 | Método | Endpoint | Auth | Descripción |
 |---|---|---|---|
-| `POST` | `/api/v1/login` | No | Login de cliente, devuelve el token |
-| `GET` | `/api/v1/stylists` | No | Listado de estilistas |
-| `GET` | `/api/v1/services` | No | Listado de servicios |
-| `GET` | `/api/v1/categories` | No | Listado de categorías |
-| `POST` | `/api/v1/appointments` | Sí | Reservar un turno |
+| `POST` | `/api/v1/login` | No | Body `{ email, password }`. Devuelve `{ token, client }` |
+| `DELETE` | `/api/v1/logout` | Sí | Invalida el token |
+| `GET` | `/api/v1/categories` | No | Listado de categorías (`/:id` incluye sus servicios) |
+| `GET` | `/api/v1/services` | No | Listado de servicios (filtro opcional `?category_id=`) |
+| `GET` | `/api/v1/stylists` | No | Listado de profesionales (con `photo_url`) |
+| `GET` | `/api/v1/stylists/:id/availability?date=AAAA-MM-DD` | No | Horarios libres del día |
 | `GET` | `/api/v1/appointments` | Sí | Turnos del cliente autenticado |
+| `GET` | `/api/v1/appointments/:id` | Sí | Detalle de un turno propio |
+| `POST` | `/api/v1/appointments` | Sí | Reservar. Body `{ appointment: { stylist_id, scheduled_at, service_ids: [], notes } }` |
+| `PATCH` | `/api/v1/appointments/:id/cancel` | Sí | Cancelar un turno propio futuro |
 
-Además, un back-office en `/admin` con sesión tradicional de Rails para el CRUD de estilistas,
-categorías, servicios y turnos.
+Errores de validación: `422` con `{ "errors": { "scheduled_at": ["Fecha y hora no puede ser en el pasado"] } }`.
+
+Ejemplo:
+
+```bash
+TOKEN=$(curl -s -X POST localhost:3000/api/v1/login -H 'Content-Type: application/json' \
+  -d '{"email":"juan@mail.com","password":"cliente123"}' | ruby -rjson -e 'puts JSON.parse(STDIN.read)["token"]')
+curl -s localhost:3000/api/v1/appointments -H "Authorization: Bearer $TOKEN"
+```
 
 ---
 
@@ -259,20 +280,10 @@ categorías, servicios y turnos.
 
 ```
 app/models/          Las 7 entidades del dominio
-config/routes.rb     Rutas (vacío por ahora)
+config/routes.rb     Rutas (portal, /admin y /api/v1)
 db/migrate/          Migraciones
 db/schema.rb         Esquema actual de la base
-db/seeds.rb          Datos de prueba (vacío por ahora)
-test/models/         Tests de los modelos
+db/seeds.rb          Datos de prueba
+test/                Tests de modelos, integración, API y mailer
 DEFINICION.md        Definición funcional del proyecto
 ```
-
----
-
-## Próximos pasos
-
-1. Cargar `db/seeds.rb` con datos de prueba, para poder desarrollar el frontend contra datos reales.
-2. Definir las rutas de `/api/v1` y sus controllers.
-3. Implementar el login con token y el filtro de autenticación.
-4. Implementar el back-office `/admin`.
-5. Agregar el mailer de confirmación de turno.

@@ -1,0 +1,22 @@
+<% content_for :title, "Ingresar" %>
+
+<div class="card narrow">
+  <h1>Ingresar</h1>
+  <p class="muted">Accedé para reservar y gestionar tus turnos.</p>
+
+  <%= form_with url: login_path, class: "form" do |f| %>
+    <div class="field">
+      <%= f.label :email, "Email" %>
+      <%= f.email_field :email, value: params[:email], required: true, autofocus: true, autocomplete: "username" %>
+    </div>
+    <div class="field">
+      <%= f.label :password, "Contraseña" %>
+      <%= f.password_field :password, required: true, autocomplete: "current-password" %>
+    </div>
+    <%= f.submit "Ingresar", class: "btn block" %>
+  <% end %>
+
+  <p class="muted" style="margin:16px 0 0; text-align:center">
+    ¿No tenés cuenta? <%= link_to "Registrate", signup_path %>
+  </p>
+</div>

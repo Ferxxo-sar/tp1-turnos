@@ -1,0 +1,38 @@
+<% content_for :title, "Servicios" %>
+
+<div class="page-head">
+  <h1>Servicios</h1>
+  <div class="actions"><%= link_to "+ Nuevo servicio", new_admin_service_path, class: "btn" %></div>
+</div>
+
+<div class="card flush">
+  <% if @services.any? %>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>Servicio</th><th>Categoría</th><th>Duración</th><th class="right">Precio</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% @services.each do |service| %>
+            <tr>
+              <td>
+                <strong><%= service.name %></strong>
+                <% if service.description.present? %><div class="muted small"><%= service.description %></div><% end %>
+              </td>
+              <td><span class="tag"><%= service.category.name %></span></td>
+              <td class="nowrap"><%= duration(service.duration_minutes) %></td>
+              <td class="right nowrap"><%= money(service.price) %></td>
+              <td class="actions">
+                <%= link_to "Editar", edit_admin_service_path(service), class: "btn sm secondary" %>
+                <%= button_to "Eliminar", admin_service_path(service), method: :delete, class: "sm danger",
+                      form: { data: { turbo_confirm: "¿Eliminar #{service.name}?" } } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="empty">Todavía no hay servicios.</div>
+  <% end %>
+</div>

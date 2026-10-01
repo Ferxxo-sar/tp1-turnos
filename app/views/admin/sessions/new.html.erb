@@ -1,0 +1,20 @@
+<% content_for :title, "Ingresar" %>
+
+<div class="card">
+  <div class="brand"><span class="brand-mark">◷</span> <%= business_name %> · Admin</div>
+  <h1 style="text-align:center">Back-office</h1>
+  <p class="muted" style="text-align:center">Acceso exclusivo para el personal.</p>
+
+  <%= form_with url: admin_login_path, class: "form" do |f| %>
+    <div class="field">
+      <%= f.label :email, "Email" %>
+      <%= f.email_field :email, value: params[:email], required: true, autofocus: true, autocomplete: "username" %>
+    </div>
+    <div class="field">
+      <%= f.label :password, "Contraseña" %>
+      <%= f.password_field :password, required: true, autocomplete: "current-password" %>
+    </div>
+    <%= f.submit "Ingresar", class: "btn block" %>
+  <% end %>
+  <p style="text-align:center; margin:16px 0 0"><%= link_to "← Volver al sitio", root_path, class: "muted small" %></p>
+</div>

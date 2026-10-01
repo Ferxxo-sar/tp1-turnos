@@ -1,0 +1,43 @@
+<div class="card flush">
+  <% if appointments.any? %>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Profesional</th>
+            <th>Servicios</th>
+            <th class="right">Total</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% appointments.each do |appointment| %>
+            <tr>
+              <td class="nowrap"><%= link_to l(appointment.scheduled_at, format: :short), admin_appointment_path(appointment) %></td>
+              <td><%= link_to appointment.client.name, admin_client_path(appointment.client) %></td>
+              <td><%= appointment.stylist.name %></td>
+              <td class="small"><%= appointment.appointment_services.map { |item| item.service.name }.join(", ") %></td>
+              <td class="right nowrap"><%= money(appointment.total) %></td>
+              <td><%= status_badge(appointment.status) %></td>
+              <td class="actions">
+                <% if appointment.status == "pending" %>
+                  <%= button_to "Confirmar", admin_appointment_path(appointment), method: :patch,
+                        params: { appointment: { status: "confirmed" } }, class: "sm secondary" %>
+                <% elsif appointment.status == "confirmed" %>
+                  <%= button_to "Realizado", admin_appointment_path(appointment), method: :patch,
+                        params: { appointment: { status: "completed" } }, class: "sm secondary" %>
+                <% end %>
+                <%= link_to "Editar", edit_admin_appointment_path(appointment), class: "btn sm secondary" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="empty"><%= local_assigns.fetch(:empty_message, "No hay turnos.") %></div>
+  <% end %>
+</div>

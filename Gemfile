@@ -15,6 +15,10 @@ gem "turbo-rails"
 # Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
 gem "stimulus-rails"
 
+# json 3.x cambió la firma de JSON.parse y rompe la lectura de la cookie de sesión
+# en Rails 8.1 (ActiveSupport::JSON.decode). Se fija en 2.x hasta que Rails lo soporte.
+gem "json", "~> 2.10"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 

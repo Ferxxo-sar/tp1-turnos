@@ -1,0 +1,56 @@
+<%= form_with model: [ :admin, appointment ], class: "form card" do |f| %>
+  <%= error_messages_for(appointment) %>
+
+  <div class="form-row">
+    <div class="field">
+      <%= f.label :client_id %>
+      <%= f.collection_select :client_id, @clients, :id, :name, { prompt: "Elegí un cliente" }, required: true %>
+    </div>
+    <div class="field">
+      <%= f.label :stylist_id %>
+      <%= f.collection_select :stylist_id, @stylists, :id, :name, { prompt: "Elegí un profesional" }, required: true %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <%= f.label :scheduled_at %>
+      <%= f.datetime_local_field :scheduled_at, required: true, step: 60 * Stylist::SLOT_MINUTES %>
+    </div>
+    <div class="field">
+      <%= f.label :status %>
+      <%= f.select :status, Appointment::STATUSES.map { |s| [ Appointment.status_label(s), s ] } %>
+    </div>
+  </div>
+
+  <% if appointment.new_record? %>
+    <fieldset>
+      <legend>Servicios</legend>
+      <div class="check-grid">
+        <% @categories.each do |category| %>
+          <% category.services.sort_by(&:name).each do |service| %>
+            <label class="check-card">
+              <%= check_box_tag "appointment[service_ids][]", service.id, @selected_service_ids.include?(service.id), id: "service_#{service.id}" %>
+              <span>
+                <strong><%= service.name %></strong>
+                <span class="meta"><%= category.name %> · <%= duration(service.duration_minutes) %> · <%= money(service.price) %></span>
+              </span>
+            </label>
+          <% end %>
+        <% end %>
+      </div>
+    </fieldset>
+  <% else %>
+    <p class="hint" style="margin:0">Los servicios de un turno existente no se modifican para conservar los precios pactados.</p>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :notes %>
+    <%= f.text_area :notes %>
+  </div>
+
+  <div class="form-actions">
+    <%= link_to "Cancelar", appointment.persisted? ? admin_appointment_path(appointment) : admin_appointments_path, class: "btn secondary" %>
+    <%= f.submit "Guardar", class: "btn" %>
+  </div>
+<% end %>

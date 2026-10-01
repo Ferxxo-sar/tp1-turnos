@@ -1,0 +1,25 @@
+<% content_for :title, "Turnos" %>
+
+<div class="page-head">
+  <h1>Turnos</h1>
+  <div class="actions"><%= link_to "+ Nuevo turno", new_admin_appointment_path, class: "btn" %></div>
+</div>
+
+<%= form_with url: admin_appointments_path, method: :get, class: "filters" do |f| %>
+  <div class="field">
+    <%= f.label :date, "Fecha" %>
+    <%= f.date_field :date, value: params[:date] %>
+  </div>
+  <div class="field">
+    <%= f.label :stylist_id, "Profesional" %>
+    <%= f.select :stylist_id, options_from_collection_for_select(@stylists, :id, :name, params[:stylist_id]), include_blank: "Todos" %>
+  </div>
+  <div class="field">
+    <%= f.label :status, "Estado" %>
+    <%= f.select :status, options_for_select(Appointment::STATUSES.map { |s| [ Appointment.status_label(s), s ] }, params[:status]), include_blank: "Todos" %>
+  </div>
+  <%= f.submit "Filtrar", name: nil, class: "btn secondary" %>
+  <%= link_to "Limpiar", admin_appointments_path, class: "btn secondary" %>
+<% end %>
+
+<%= render "table", appointments: @appointments, empty_message: "No hay turnos con esos filtros." %>

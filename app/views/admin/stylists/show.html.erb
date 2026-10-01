@@ -1,0 +1,26 @@
+<% content_for :title, @stylist.name %>
+
+<div class="page-head">
+  <div class="person">
+    <%= avatar_for(@stylist, size: "lg") %>
+    <div>
+      <p style="margin:0"><%= link_to "← Profesionales", admin_stylists_path %></p>
+      <h1 style="margin:0"><%= @stylist.name %></h1>
+      <span class="muted"><%= @stylist.specialty %></span>
+    </div>
+  </div>
+  <div class="actions">
+    <%= link_to "Editar", edit_admin_stylist_path(@stylist), class: "btn secondary" %>
+    <%= button_to "Eliminar", admin_stylist_path(@stylist), method: :delete, class: "danger",
+          form: { data: { turbo_confirm: "Se eliminarán también todos sus turnos. ¿Continuar?" } } %>
+  </div>
+</div>
+
+<% if @stylist.bio.present? %>
+  <div class="card"><p style="margin:0"><%= @stylist.bio %></p></div>
+<% end %>
+
+<div class="section">
+  <div class="section-head"><h2>Próximos turnos</h2></div>
+  <%= render "admin/appointments/table", appointments: @upcoming, empty_message: "Sin turnos próximos." %>
+</div>

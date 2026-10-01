@@ -1,0 +1,25 @@
+<h2 style="margin:0 0 12px">¡Hola, <%= @client.name %>!</h2>
+<p>Tu turno en <strong><%= @business_name %></strong> quedó reservado.</p>
+
+<table cellpadding="6" style="border-collapse:collapse;margin:16px 0">
+  <tr><td style="color:#667085">Fecha</td><td><strong><%= l(@appointment.scheduled_at, format: :long) %></strong></td></tr>
+  <tr><td style="color:#667085">Profesional</td><td><%= @appointment.stylist.name %></td></tr>
+  <tr><td style="color:#667085">Estado</td><td><%= @appointment.status_label %></td></tr>
+</table>
+
+<table cellpadding="6" style="border-collapse:collapse;width:100%;max-width:420px">
+  <% @appointment.appointment_services.each do |item| %>
+    <tr style="border-bottom:1px solid #eaecf0">
+      <td><%= item.service.name %></td>
+      <td style="text-align:right"><%= number_to_currency(item.price_at_booking) %></td>
+    </tr>
+  <% end %>
+  <tr>
+    <td><strong>Total</strong></td>
+    <td style="text-align:right"><strong><%= number_to_currency(@appointment.total) %></strong></td>
+  </tr>
+</table>
+
+<p style="margin-top:20px">
+  Podés ver o cancelar tu turno desde <%= link_to "Mis turnos", appointment_url(@appointment) %>.
+</p>

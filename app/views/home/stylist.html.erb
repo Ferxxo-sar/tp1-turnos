@@ -1,0 +1,44 @@
+<% content_for :title, @stylist.name %>
+
+<p><%= link_to "← Volver", root_path %></p>
+
+<div class="layout-2-1">
+  <div class="card">
+    <div class="card-title">
+      <h2>Horarios libres</h2>
+      <%= form_with url: public_stylist_path(@stylist), method: :get, class: "button-row", data: { turbo_frame: "_top" } do |f| %>
+        <%= f.date_field :date, value: @date.iso8601, min: Date.current.iso8601, onchange: "this.form.requestSubmit()", aria: { label: "Fecha" } %>
+      <% end %>
+    </div>
+    <p class="muted"><%= l(@date, format: :long).capitalize %></p>
+
+    <% if @slots.any? %>
+      <div class="slots">
+        <% @slots.each do |slot| %>
+          <%= link_to l(slot, format: :hour), new_appointment_path(stylist_id: @stylist.id, date: @date.iso8601, time: l(slot, format: :hour)), class: "slot-link" %>
+        <% end %>
+      </div>
+      <p class="hint" style="margin-top:12px">Tocá un horario para reservarlo.</p>
+    <% else %>
+      <div class="empty-slots">No hay horarios disponibles para este día. Probá con otra fecha.</div>
+    <% end %>
+
+    <div class="button-row" style="margin-top:16px">
+      <%= link_to "← Día anterior", public_stylist_path(@stylist, date: (@date - 1).iso8601), class: "btn sm secondary" if @date > Date.current %>
+      <%= link_to "Día siguiente →", public_stylist_path(@stylist, date: (@date + 1).iso8601), class: "btn sm secondary" %>
+    </div>
+  </div>
+
+  <aside class="card">
+    <div class="person" style="flex-direction:column; text-align:center">
+      <%= avatar_for(@stylist, size: "lg") %>
+      <div>
+        <h2 style="margin:0"><%= @stylist.name %></h2>
+        <span class="muted"><%= @stylist.specialty %></span>
+      </div>
+    </div>
+    <% if @stylist.bio.present? %>
+      <p style="margin-top:16px"><%= @stylist.bio %></p>
+    <% end %>
+  </aside>
+</div>

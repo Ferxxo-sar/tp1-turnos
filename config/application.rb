@@ -21,7 +21,12 @@ module Tp1Programacion
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
+    config.time_zone = "America/Argentina/Buenos_Aires"
+    config.i18n.default_locale = :es
+    config.i18n.available_locales = [ :es, :en ]
+
+    # Nombre del negocio que se muestra en el front. La app es genérica: se puede
+    # usar para una peluquería, un consultorio, un taller, etc.
+    config.x.business_name = ENV.fetch("BUSINESS_NAME", "Estudio Turnos")
   end
 end

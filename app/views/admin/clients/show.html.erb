@@ -1,0 +1,12 @@
+<% content_for :title, @client.name %>
+
+<div class="page-head">
+  <div>
+    <p style="margin:0"><%= link_to "← Clientes", admin_clients_path %></p>
+    <h1 style="margin:0"><%= @client.name %></h1>
+    <span class="muted"><%= @client.email %><%= " · #{@client.phone}" if @client.phone.present? %></span>
+  </div>
+</div>
+
+<div class="section-head"><h2>Turnos (<%= @appointments.size %>)</h2></div>
+<%= render "admin/appointments/table", appointments: @appointments, empty_message: "Este cliente no tiene turnos." %>

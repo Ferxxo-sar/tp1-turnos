@@ -1,0 +1,52 @@
+<% content_for :title, "Turno ##{@appointment.id}" %>
+
+<div class="page-head">
+  <div>
+    <p style="margin:0"><%= link_to "← Turnos", admin_appointments_path %></p>
+    <h1>Turno #<%= @appointment.id %> <%= status_badge(@appointment.status) %></h1>
+  </div>
+  <div class="actions">
+    <%= link_to "Editar", edit_admin_appointment_path(@appointment), class: "btn secondary" %>
+    <%= button_to "Eliminar", admin_appointment_path(@appointment), method: :delete, class: "danger",
+          form: { data: { turbo_confirm: "¿Eliminar el turno? Esta acción no se puede deshacer." } } %>
+  </div>
+</div>
+
+<div class="layout-2-1">
+  <div class="card">
+    <dl class="detail">
+      <dt>Fecha</dt><dd><%= l(@appointment.scheduled_at, format: :long).capitalize %></dd>
+      <dt>Duración</dt><dd><%= duration(@appointment.duration_minutes) %> (hasta <%= l(@appointment.ends_at, format: :hour) %>)</dd>
+      <dt>Cliente</dt>
+      <dd>
+        <%= link_to @appointment.client.name, admin_client_path(@appointment.client) %><br>
+        <span class="muted small"><%= @appointment.client.email %><%= " · #{@appointment.client.phone}" if @appointment.client.phone.present? %></span>
+      </dd>
+      <dt>Profesional</dt><dd><%= link_to @appointment.stylist.name, admin_stylist_path(@appointment.stylist) %></dd>
+      <dt>Notas</dt><dd><%= @appointment.notes.presence || tag.span("—", class: "muted") %></dd>
+      <dt>Creado</dt><dd class="muted"><%= l(@appointment.created_at) %></dd>
+    </dl>
+
+    <div class="button-row" style="margin-top:20px">
+      <span class="label">Cambiar estado:</span>
+      <% (Appointment::STATUSES - [ @appointment.status ]).each do |status| %>
+        <%= button_to Appointment.status_label(status), admin_appointment_path(@appointment), method: :patch,
+              params: { appointment: { status: status } }, class: "sm secondary" %>
+      <% end %>
+    </div>
+  </div>
+
+  <aside class="card summary">
+    <h3>Servicios</h3>
+    <ul class="service-list">
+      <% @appointment.appointment_services.each do |item| %>
+        <li>
+          <span><%= item.service.name %></span>
+          <span class="price"><%= money(item.price_at_booking) %></span>
+        </li>
+      <% end %>
+    </ul>
+    <div class="total" style="margin-top:8px"><span>Total</span><span><%= money(@appointment.total) %></span></div>
+    <p class="hint" style="margin:0">Precios congelados al momento de la reserva.</p>
+  </aside>
+</div>
