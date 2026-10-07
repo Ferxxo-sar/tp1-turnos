@@ -17,7 +17,7 @@ gem "stimulus-rails"
 
 # json 3.x cambió la firma de JSON.parse y rompe la lectura de la cookie de sesión
 # en Rails 8.1 (ActiveSupport::JSON.decode). Se fija en 2.x hasta que Rails lo soporte.
-gem "json", "~> 2.10"
+gem "json", "~> 3.0"
 
 # Exportación de turnos a CSV (deja de ser default gem en Ruby 3.4)
 gem "csv"
