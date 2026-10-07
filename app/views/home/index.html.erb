@@ -1,8 +1,8 @@
 <% content_for :hero do %>
   <section class="hero">
     <div class="container">
-      <span class="tag">Reservas online · 24/7</span>
-      <h1 style="margin-top:12px">Reservá tu turno en segundos.</h1>
+      <span class="eyebrow">Reservas online · 24/7</span>
+      <h1>Tu turno, <em>en segundos.</em></h1>
       <p>Elegí el servicio, el profesional y el horario que te quede cómodo. Te confirmamos por email y podés cancelar cuando quieras.</p>
       <div class="actions">
         <%= link_to "Reservar turno", new_appointment_path, class: "btn lg" %>
@@ -11,6 +11,11 @@
         <% else %>
           <%= link_to "Ya tengo cuenta", login_path, class: "btn lg secondary" %>
         <% end %>
+      </div>
+      <div class="hero-facts">
+        <div><strong><%= @stylists.size %></strong><span>Profesionales</span></div>
+        <div><strong><%= @categories.sum { |category| category.services.size } %></strong><span>Servicios</span></div>
+        <div><strong>Lun a Sáb</strong><span><%= Stylist::OPENING_HOUR %> a <%= Stylist::CLOSING_HOUR %> hs</span></div>
       </div>
     </div>
   </section>
