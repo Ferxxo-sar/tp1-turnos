@@ -49,6 +49,7 @@ La app es genérica: el nombre del negocio se configura con la variable de entor
 | `/admin/profesionales`, `/admin/servicios`, `/admin/categorias` | Catálogo, con turnos y reservas por ítem |
 | `/admin/reportes` | Reporte mensual: facturado, a cobrar, ticket promedio, turnos por día y estado, ranking de profesionales y servicios |
 | `/admin/administradores` | ABM de usuarios del back-office (nadie puede borrarse a sí mismo) |
+| `/madmin` | Panel genérico de base de datos (gema Madmin, similar al admin de Django). Usa el mismo login de administradores |
 
 El diseño sigue el sistema visual de Merkén: papel cálido, tinta oscura y acento terracota, con
 Instrument Serif para títulos, Syne para texto y DM Mono para datos. Todo vive en

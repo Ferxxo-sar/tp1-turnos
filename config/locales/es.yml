@@ -71,7 +71,9 @@ es:
       category: Categoría
       service: Servicio
       appointment: Turno
-      appointment_service: Servicio del turno
+      appointment_service:
+        one: Servicio del turno
+        other: Servicios de turnos
     attributes:
       admin_user:
         name: Nombre
@@ -112,6 +114,10 @@ es:
       appointment_service:
         service: Servicio
         price_at_booking: Precio pactado
+  attributes:
+    id: ID
+    created_at: Creado
+    updated_at: Actualizado
   appointment_statuses:
     pending: Pendiente
     confirmed: Confirmado

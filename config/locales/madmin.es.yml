@@ -1,0 +1,90 @@
+# Traducción de Madmin (la gema solo trae en, fr, el y ko).
+es:
+  madmin:
+    layout:
+      open_menu: Abrir menú
+      admin_suffix: Base de datos
+    navigation:
+      dashboard: Inicio
+      github: Madmin en GitHub
+    dashboard:
+      title: Base de datos
+      hint_html: Panel para ver y editar los registros directamente. Para la operación diaria usá el <a href="/admin">back-office</a>.
+    actions:
+      all: Todos
+      view: Ver
+      edit: Editar
+      delete: Eliminar
+      new: Nuevo
+      remove: Quitar
+      cancel: Cancelar
+    search:
+      placeholder: Buscar
+    titles:
+      new: Nuevo %{name}
+      edit: Editar %{name}
+    form:
+      errors:
+        one: Hay 1 error en el formulario
+        other: Hay %{count} errores en el formulario
+    flash:
+      readonly: "%{name} es de solo lectura"
+      destroy_failed: "%{name} no se pudo eliminar"
+      destroy_restricted: "%{name} no se puede eliminar porque otros registros dependen de él"
+    confirmations:
+      delete: ¿Seguro?
+      remove_with_changes: ¿Seguro? Vas a perder los demás cambios.
+    nested_form:
+      add_new: "+ Agregar"
+    fields:
+      attachment:
+        one: "%{count} adjunto"
+        other: "%{count} adjuntos"
+    missing_resource:
+      message: "Falta el recurso %{resource}."
+      create_hint: "Crealo con:"
+    pagination:
+      label: Paginación
+      previous: Anterior
+      next: Siguiente
+      info: "Mostrando %{from}-%{to} de %{count}"
+      empty: No hay registros
+      per_page: Por página
+    filters:
+      button: "Filtros"
+      heading: "Mostrar registros donde"
+      add: "+ Agregar filtro"
+      apply: "Aplicar"
+      clear_all: "Quitar filtros"
+      remove: "Quitar filtro"
+      column: "Columna"
+      operator: "Condición"
+      value: "Valor"
+      operators:
+        string:
+          contains: "contiene"
+          eq: "es"
+          starts_with: "empieza con"
+          blank: "está vacío"
+          present: "no está vacío"
+        number:
+          eq: "="
+          gt: ">"
+          gte: "≥"
+          lt: "<"
+          lte: "≤"
+          blank: "está vacío"
+        date:
+          eq: "el"
+          gte: "desde el"
+          lte: "hasta el"
+          blank: "está vacío"
+        datetime:
+          gte: "después de"
+          lte: "antes de"
+          blank: "está vacío"
+        boolean:
+          "true": "es verdadero"
+          "false": "es falso"
+        array:
+          includes: "incluye"
