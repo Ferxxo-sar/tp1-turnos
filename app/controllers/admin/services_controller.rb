@@ -4,7 +4,13 @@ module Admin
     before_action :load_categories, only: %i[new create edit update]
 
     def index
+      @categories = Category.alphabetical
       @services = Service.includes(:category).order("categories.name", :name).references(:category)
+      @services = @services.where(category_id: params[:category_id]) if params[:category_id].present?
+      @booking_counts = AppointmentService.joins(:appointment)
+                                          .where.not(appointments: { status: "cancelled" })
+                                          .group(:service_id).count
+      @used_service_ids = AppointmentService.distinct.pluck(:service_id).to_set
     end
 
     def new

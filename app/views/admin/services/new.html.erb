@@ -1,3 +1,8 @@
 <% content_for :title, "Nuevo servicio" %>
-<div class="page-head"><h1>Nuevo servicio</h1></div>
+<div class="page-head">
+  <div>
+    <%= link_to "← Servicios", admin_services_path, class: "back-link" %>
+    <h1>Nuevo servicio</h1>
+  </div>
+</div>
 <%= render "form", service: @service %>

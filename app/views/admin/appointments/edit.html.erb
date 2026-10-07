@@ -1,3 +1,8 @@
 <% content_for :title, "Editar turno" %>
-<div class="page-head"><h1>Editar turno #<%= @appointment.id %></h1></div>
+<div class="page-head">
+  <div>
+    <%= link_to "← Turno ##{@appointment.id}", admin_appointment_path(@appointment), class: "back-link" %>
+    <h1>Editar turno</h1>
+  </div>
+</div>
 <%= render "form", appointment: @appointment %>

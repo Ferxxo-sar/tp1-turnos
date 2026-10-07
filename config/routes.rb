@@ -22,11 +22,15 @@ Rails.application.routes.draw do
     post "ingresar" => "sessions#create"
     delete "salir" => "sessions#destroy", as: :logout
 
+    get "agenda" => "agenda#show", as: :agenda
+    get "reportes" => "reports#show", as: :reports
+
     resources :appointments, path: "turnos"
     resources :stylists, path: "profesionales"
     resources :services, path: "servicios", except: :show
     resources :categories, path: "categorias", except: :show
-    resources :clients, path: "clientes", only: %i[index show]
+    resources :clients, path: "clientes"
+    resources :admin_users, path: "administradores", except: :show
   end
 
   # API JSON

@@ -9,9 +9,12 @@ module Admin
         week: Appointment.where(scheduled_at: Time.current.all_week).where.not(status: "cancelled").count,
         clients: Client.count
       }
-      @month_revenue = AppointmentService.joins(:appointment)
-                                         .where(appointments: { status: "completed", scheduled_at: Time.current.all_month })
-                                         .sum(:price_at_booking)
+      @report = MonthlyReport.new(Date.current)
+      @previous_revenue = MonthlyReport.new(Date.current.prev_month).revenue
+
+      upcoming = Appointment.where(scheduled_at: Date.current.beginning_of_day..(Date.current + 6).end_of_day)
+                            .where.not(status: "cancelled").pluck(:scheduled_at).map(&:to_date).tally
+      @next_days = (Date.current..(Date.current + 6)).index_with { |day| upcoming.fetch(day, 0) }
     end
   end
 end

@@ -1,8 +1,11 @@
 <% content_for :title, "Ingresar" %>
 
 <div class="card">
-  <div class="brand"><span class="brand-mark">◷</span> <%= business_name %> · Admin</div>
-  <h1 style="text-align:center">Back-office</h1>
+  <div class="brand">
+    <span class="brand-name"><%= business_name %></span>
+    <span class="brand-sub">Back-office</span>
+  </div>
+  <h1 style="text-align:center">Ingresá</h1>
   <p class="muted" style="text-align:center">Acceso exclusivo para el personal.</p>
 
   <%= form_with url: admin_login_path, class: "form" do |f| %>

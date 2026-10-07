@@ -19,6 +19,9 @@ gem "stimulus-rails"
 # en Rails 8.1 (ActiveSupport::JSON.decode). Se fija en 2.x hasta que Rails lo soporte.
 gem "json", "~> 2.10"
 
+# Exportación de turnos a CSV (deja de ser default gem en Ruby 3.4)
+gem "csv"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 

@@ -5,6 +5,9 @@
     <div class="field">
       <%= f.label :client_id %>
       <%= f.collection_select :client_id, @clients, :id, :name, { prompt: "Elegí un cliente" }, required: true %>
+      <% if appointment.new_record? %>
+        <span class="hint">¿No está en la lista? <%= link_to "Dar de alta un cliente", new_admin_client_path %>.</span>
+      <% end %>
     </div>
     <div class="field">
       <%= f.label :stylist_id %>

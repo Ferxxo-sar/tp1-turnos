@@ -1,0 +1,42 @@
+<% content_for :title, "Administradores" %>
+
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Gestión</span>
+    <h1>Administradores</h1>
+  </div>
+  <div class="actions">
+    <%= link_to new_admin_admin_user_path, class: "btn" do %>
+      <%= icon(:plus, size: 16) %> Nuevo administrador
+    <% end %>
+  </div>
+</div>
+
+<p class="muted">Personas con acceso a este back-office. Los profesionales no inician sesión.</p>
+
+<div class="card flush">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Nombre</th><th>Email</th><th>Alta</th><th></th></tr></thead>
+      <tbody>
+        <% @admin_users.each do |admin_user| %>
+          <tr>
+            <td>
+              <strong><%= admin_user.name %></strong>
+              <% if admin_user == current_admin %><span class="tag">Vos</span><% end %>
+            </td>
+            <td><%= admin_user.email %></td>
+            <td class="muted small nowrap"><%= l(admin_user.created_at.to_date) %></td>
+            <td class="actions">
+              <%= link_to "Editar", edit_admin_admin_user_path(admin_user), class: "btn sm secondary" %>
+              <% unless admin_user == current_admin %>
+                <%= button_to "Eliminar", admin_admin_user_path(admin_user), method: :delete, class: "sm danger",
+                      form: { data: { turbo_confirm: "¿Quitarle el acceso a #{admin_user.name}?" } } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

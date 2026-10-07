@@ -2,11 +2,48 @@
 
 <div class="page-head">
   <div>
-    <p style="margin:0"><%= link_to "← Clientes", admin_clients_path %></p>
-    <h1 style="margin:0"><%= @client.name %></h1>
-    <span class="muted"><%= @client.email %><%= " · #{@client.phone}" if @client.phone.present? %></span>
+    <%= link_to "← Clientes", admin_clients_path, class: "back-link" %>
+    <h1><%= @client.name %></h1>
+    <span class="muted"><%= mail_to @client.email %><%= " · #{@client.phone}" if @client.phone.present? %> · cliente desde <%= l(@client.created_at.to_date, format: "%B %Y") %></span>
+  </div>
+  <div class="actions">
+    <%= link_to "Editar", edit_admin_client_path(@client), class: "btn secondary" %>
+    <%= button_to "Eliminar", admin_client_path(@client), method: :delete, class: "danger",
+          form: { data: { turbo_confirm: "Se eliminará el cliente y todo su historial de turnos. ¿Continuar?" } } %>
+    <%= link_to new_admin_appointment_path(client_id: @client.id), class: "btn" do %>
+      <%= icon(:plus, size: 16) %> Nuevo turno
+    <% end %>
   </div>
 </div>
 
-<div class="section-head"><h2>Turnos (<%= @appointments.size %>)</h2></div>
-<%= render "admin/appointments/table", appointments: @appointments, empty_message: "Este cliente no tiene turnos." %>
+<div class="grid grid-4">
+  <div class="card stat accent">
+    <span class="label">Total gastado</span>
+    <span class="value"><%= money(@stats[:spent], precision: 0) %></span>
+    <span class="delta">en turnos realizados</span>
+  </div>
+  <div class="card stat">
+    <span class="label">Turnos</span>
+    <span class="value"><%= @stats[:total] %></span>
+    <span class="delta"><%= @stats[:completed] %> realizados · <%= @stats[:cancelled] %> cancelados</span>
+  </div>
+  <div class="card stat">
+    <span class="label">Última visita</span>
+    <span class="value" style="font-size:1.5rem"><%= @stats[:last_visit] ? l(@stats[:last_visit].to_date) : "—" %></span>
+  </div>
+  <div class="card stat">
+    <span class="label">Próximo turno</span>
+    <% if @stats[:next] %>
+      <span class="value" style="font-size:1.5rem"><%= link_to l(@stats[:next].scheduled_at, format: :short), admin_appointment_path(@stats[:next]) %></span>
+      <span class="delta">con <%= @stats[:next].stylist.name %></span>
+    <% else %>
+      <span class="value" style="font-size:1.5rem">—</span>
+    <% end %>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Historial de turnos</h2></div>
+  <%= render "admin/appointments/table", appointments: @appointments, empty_message: "Este cliente no tiene turnos." %>
+  <%= render "admin/shared/pagination" %>
+</div>

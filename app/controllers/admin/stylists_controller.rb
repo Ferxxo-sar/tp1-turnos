@@ -4,10 +4,18 @@ module Admin
 
     def index
       @stylists = Stylist.alphabetical.with_attached_photo
+      @upcoming_counts = Appointment.upcoming.group(:stylist_id).count
     end
 
     def show
       @upcoming = @stylist.appointments.with_details.upcoming.chronological
+      month = @stylist.appointments.where(scheduled_at: Time.current.all_month)
+      @stats = {
+        today: @stylist.appointments.on_day(Date.current).where.not(status: "cancelled").count,
+        month: month.where.not(status: "cancelled").count,
+        completed: month.where(status: "completed").count,
+        revenue: AppointmentService.where(appointment_id: month.where(status: "completed").select(:id)).sum(:price_at_booking)
+      }
     end
 
     def new

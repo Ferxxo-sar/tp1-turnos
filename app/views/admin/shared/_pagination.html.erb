@@ -1,0 +1,18 @@
+<% if @pagination && @pagination[:pages] > 1 %>
+  <% page = @pagination[:page] %>
+  <nav class="pagination" aria-label="Paginación">
+    <span class="muted small"><%= @pagination[:total] %> resultados · página <%= page %> de <%= @pagination[:pages] %></span>
+    <div class="button-row">
+      <% if page > 1 %>
+        <%= link_to url_for(request.query_parameters.merge("page" => page - 1)), class: "btn sm secondary", rel: "prev" do %>
+          <%= icon(:left, size: 15) %> Anterior
+        <% end %>
+      <% end %>
+      <% if page < @pagination[:pages] %>
+        <%= link_to url_for(request.query_parameters.merge("page" => page + 1)), class: "btn sm secondary", rel: "next" do %>
+          Siguiente <%= icon(:right, size: 15) %>
+        <% end %>
+      <% end %>
+    </div>
+  </nav>
+<% end %>

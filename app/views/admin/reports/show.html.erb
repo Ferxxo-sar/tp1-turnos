@@ -1,0 +1,137 @@
+<% content_for :title, "Reportes" %>
+<% month = @report.month %>
+<% counts = @report.counts_by_status %>
+
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Reporte mensual</span>
+    <h1><%= l(month, format: "%B %Y").capitalize %></h1>
+  </div>
+  <div class="actions">
+    <%= link_to admin_reports_path(month: month.prev_month.strftime("%Y-%m")), class: "btn sm secondary", aria: { label: "Mes anterior" } do %>
+      <%= icon(:left, size: 15) %>
+    <% end %>
+    <%= form_with url: admin_reports_path, method: :get do |f| %>
+      <%= f.month_field :month, value: month.strftime("%Y-%m"), aria: { label: "Mes" }, onchange: "this.form.requestSubmit()" %>
+    <% end %>
+    <%= link_to admin_reports_path(month: month.next_month.strftime("%Y-%m")), class: "btn sm secondary", aria: { label: "Mes siguiente" } do %>
+      <%= icon(:right, size: 15) %>
+    <% end %>
+    <%= link_to admin_appointments_path(from: month.iso8601, to: month.end_of_month.iso8601, format: :csv), class: "btn sm secondary" do %>
+      <%= icon(:download, size: 15) %> CSV del mes
+    <% end %>
+  </div>
+</div>
+
+<div class="grid grid-4">
+  <div class="card stat accent">
+    <span class="label">Facturado</span>
+    <span class="value"><%= money(@report.revenue, precision: 0) %></span>
+    <span class="delta"><%= pluralize(counts["completed"], "turno realizado", plural: "turnos realizados") %></span>
+  </div>
+  <div class="card stat">
+    <span class="label">A cobrar</span>
+    <span class="value"><%= money(@report.expected_revenue, precision: 0) %></span>
+    <span class="delta">pendientes y confirmados</span>
+  </div>
+  <div class="card stat">
+    <span class="label">Ticket promedio</span>
+    <span class="value"><%= money(@report.average_ticket, precision: 0) %></span>
+    <span class="delta">por turno realizado</span>
+  </div>
+  <div class="card stat">
+    <span class="label">Clientes nuevos</span>
+    <span class="value"><%= @report.new_clients %></span>
+    <span class="delta"><%= @report.cancellation_rate %>% de cancelación</span>
+  </div>
+</div>
+
+<div class="layout-2-1 section">
+  <div class="card">
+    <div class="card-title">
+      <h3>Turnos por día</h3>
+      <span class="muted small"><%= pluralize(counts.values_at("pending", "confirmed", "completed").sum, "turno") %> sin contar cancelados</span>
+    </div>
+    <% daily = @report.daily_counts %>
+    <% max = [ daily.values.max, 1 ].max %>
+    <div class="bars dense">
+      <% daily.each do |day, count| %>
+        <%= link_to admin_agenda_path(date: day.iso8601), class: [ "bar", ("today" if day == Date.current) ], style: "text-decoration:none", title: "#{l(day)}: #{count}" do %>
+          <span class="fill" style="height: <%= (count * 100.0 / max).round %>%"></span>
+          <span class="d"><%= day.day if day.day == 1 || (day.day % 5).zero? %></span>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><h3>Estado de los turnos</h3></div>
+    <% total = [ @report.total_count, 1 ].max %>
+    <div class="status-strip">
+      <% counts.each do |status, count| %>
+        <span class="<%= status %>" style="width: <%= (count * 100.0 / total).round(1) %>%" title="<%= Appointment.status_label(status) %>: <%= count %>"></span>
+      <% end %>
+    </div>
+    <ul class="service-list">
+      <% counts.each do |status, count| %>
+        <li>
+          <span><%= status_badge(status) %></span>
+          <%= link_to count, admin_appointments_path(status: status, from: month.iso8601, to: month.end_of_month.iso8601), class: "mono" %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>
+
+<div class="grid grid-2 section">
+  <div>
+    <div class="section-head"><h2>Por profesional</h2></div>
+    <div class="card flush">
+      <% by_stylist = @report.by_stylist %>
+      <% max_amount = [ by_stylist.map(&:last).max.to_d, 1 ].max %>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Profesional</th><th class="right">Turnos</th><th class="right">Facturado</th><th></th></tr></thead>
+          <tbody>
+            <% by_stylist.each do |stylist, count, amount| %>
+              <tr>
+                <td><%= link_to stylist.name, admin_stylist_path(stylist) %></td>
+                <td class="num"><%= count %></td>
+                <td class="num"><%= money(amount, precision: 0) %></td>
+                <td style="width:30%"><div class="meter"><span style="width: <%= (amount.to_d * 100 / max_amount).round %>%"></span></div></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <% if by_stylist.empty? %><div class="empty">Sin profesionales.</div><% end %>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-head"><h2>Servicios más pedidos</h2></div>
+    <div class="card flush">
+      <% top = @report.top_services %>
+      <% if top.any? %>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Servicio</th><th class="right">Veces</th><th class="right">Importe</th></tr></thead>
+            <tbody>
+              <% top.each do |service, count, amount| %>
+                <tr>
+                  <td><%= service.name %> <span class="tag"><%= service.category.name %></span></td>
+                  <td class="num"><%= count %></td>
+                  <td class="num"><%= money(amount, precision: 0) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="empty">Sin turnos en el mes.</div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<p class="hint section">Los importes usan el precio congelado al momento de cada reserva. "Facturado" incluye solo turnos realizados.</p>

@@ -7,31 +7,49 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= render "shared/fonts" %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="admin">
     <% if current_admin %>
       <div class="admin-shell">
         <aside class="sidebar">
           <%= link_to admin_root_path, class: "brand" do %>
-            <span class="brand-mark">◷</span> <span>Admin</span>
+            <span class="brand-name"><%= business_name %></span>
+            <span class="brand-sub">Back-office</span>
           <% end %>
-          <nav>
-            <%= nav_link "Inicio", admin_root_path, exact: true %>
-            <%= nav_link "Turnos", admin_appointments_path %>
-            <%= nav_link "Profesionales", admin_stylists_path %>
-            <%= nav_link "Servicios", admin_services_path %>
-            <%= nav_link "Categorías", admin_categories_path %>
-            <%= nav_link "Clientes", admin_clients_path %>
+
+          <nav aria-label="Back-office">
+            <span class="nav-group">Operación</span>
+            <%= nav_link "Inicio", admin_root_path, exact: true, icon: :home %>
+            <%= nav_link "Agenda", admin_agenda_path, icon: :calendar %>
+            <%= nav_link "Turnos", admin_appointments_path, icon: :list %>
+            <%= nav_link "Clientes", admin_clients_path, icon: :users %>
+
+            <span class="nav-group">Catálogo</span>
+            <%= nav_link "Profesionales", admin_stylists_path, icon: :scissors %>
+            <%= nav_link "Servicios", admin_services_path, icon: :tag %>
+            <%= nav_link "Categorías", admin_categories_path, icon: :folder %>
+
+            <span class="nav-group">Gestión</span>
+            <%= nav_link "Reportes", admin_reports_path, icon: :chart %>
+            <%= nav_link "Administradores", admin_admin_users_path, icon: :shield %>
           </nav>
+
           <div class="me">
-            <strong><%= current_admin.name %></strong>
-            <span class="muted"><%= current_admin.email %></span>
-            <div class="button-row" style="margin-top:8px">
-              <%= link_to "Ver sitio", root_path, class: "btn sm secondary" %>
-              <%= button_to "Salir", admin_logout_path, method: :delete, class: "sm secondary" %>
+            <div>
+              <strong><%= current_admin.name %></strong>
+              <span class="muted small"><%= current_admin.email %></span>
+            </div>
+            <div class="button-row">
+              <%= link_to root_path, class: "btn sm secondary", title: "Ver sitio público" do %>
+                <%= icon(:external, size: 15) %> Sitio
+              <% end %>
+              <%= button_to admin_logout_path, method: :delete, class: "sm secondary", title: "Cerrar sesión" do %>
+                <%= icon(:logout, size: 15) %> Salir
+              <% end %>
             </div>
           </div>
         </aside>
@@ -42,7 +60,7 @@
       </div>
     <% else %>
       <main class="auth-page">
-        <div style="width:min(420px,100%)">
+        <div class="auth-box">
           <%= render "shared/flash" %>
           <%= yield %>
         </div>

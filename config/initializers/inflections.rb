@@ -14,3 +14,9 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym "RESTful"
 # end
+
+# Reglas básicas del español para pluralize ("turno" → "turnos", "profesional" → "profesionales").
+ActiveSupport::Inflector.inflections(:es) do |inflect|
+  inflect.plural(/([aeiouáéó])$/i, '\1s')
+  inflect.plural(/([^aeiouáéó])$/i, '\1es')
+end

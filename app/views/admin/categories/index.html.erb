@@ -1,24 +1,36 @@
 <% content_for :title, "Categorías" %>
 
 <div class="page-head">
-  <h1>Categorías</h1>
-  <div class="actions"><%= link_to "+ Nueva categoría", new_admin_category_path, class: "btn" %></div>
+  <div>
+    <span class="eyebrow">Catálogo</span>
+    <h1>Categorías</h1>
+  </div>
+  <div class="actions">
+    <%= link_to new_admin_category_path, class: "btn" do %>
+      <%= icon(:plus, size: 16) %> Nueva categoría
+    <% end %>
+  </div>
 </div>
 
 <div class="card flush">
   <% if @categories.any? %>
     <div class="table-wrap">
       <table class="table">
-        <thead><tr><th>Nombre</th><th>Servicios</th><th></th></tr></thead>
+        <thead><tr><th>Nombre</th><th class="right">Servicios</th><th>Incluye</th><th></th></tr></thead>
         <tbody>
           <% @categories.each do |category| %>
             <tr>
-              <td><strong><%= category.name %></strong></td>
+              <td><strong><%= link_to category.name, admin_services_path(category_id: category.id) %></strong></td>
+              <td class="num"><%= category.services.size %></td>
               <td class="muted small"><%= category.services.map(&:name).sort.join(", ").presence || "—" %></td>
               <td class="actions">
                 <%= link_to "Editar", edit_admin_category_path(category), class: "btn sm secondary" %>
-                <%= button_to "Eliminar", admin_category_path(category), method: :delete, class: "sm danger",
-                      form: { data: { turbo_confirm: "¿Eliminar #{category.name}?" } } %>
+                <% if category.services.any? %>
+                  <span class="muted small" title="Tiene servicios: no se puede eliminar">En uso</span>
+                <% else %>
+                  <%= button_to "Eliminar", admin_category_path(category), method: :delete, class: "sm danger",
+                        form: { data: { turbo_confirm: "¿Eliminar #{category.name}?" } } %>
+                <% end %>
               </td>
             </tr>
           <% end %>
@@ -29,3 +41,4 @@
     <div class="empty">Todavía no hay categorías.</div>
   <% end %>
 </div>
+<p class="hint">Una categoría con servicios no se puede eliminar: primero mové o eliminá sus servicios.</p>

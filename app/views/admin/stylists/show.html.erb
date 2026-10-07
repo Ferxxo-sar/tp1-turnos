@@ -4,23 +4,34 @@
   <div class="person">
     <%= avatar_for(@stylist, size: "lg") %>
     <div>
-      <p style="margin:0"><%= link_to "← Profesionales", admin_stylists_path %></p>
-      <h1 style="margin:0"><%= @stylist.name %></h1>
+      <%= link_to "← Profesionales", admin_stylists_path, class: "back-link" %>
+      <h1><%= @stylist.name %></h1>
       <span class="muted"><%= @stylist.specialty %></span>
     </div>
   </div>
   <div class="actions">
+    <%= link_to "Ver agenda", admin_agenda_path(stylist_id: @stylist.id), class: "btn secondary" %>
     <%= link_to "Editar", edit_admin_stylist_path(@stylist), class: "btn secondary" %>
     <%= button_to "Eliminar", admin_stylist_path(@stylist), method: :delete, class: "danger",
           form: { data: { turbo_confirm: "Se eliminarán también todos sus turnos. ¿Continuar?" } } %>
   </div>
 </div>
 
+<div class="grid grid-4">
+  <div class="card stat"><span class="label">Turnos hoy</span><span class="value"><%= @stats[:today] %></span></div>
+  <div class="card stat"><span class="label">Turnos en el mes</span><span class="value"><%= @stats[:month] %></span></div>
+  <div class="card stat"><span class="label">Realizados en el mes</span><span class="value"><%= @stats[:completed] %></span></div>
+  <div class="card stat accent"><span class="label">Facturado en el mes</span><span class="value"><%= money(@stats[:revenue], precision: 0) %></span></div>
+</div>
+
 <% if @stylist.bio.present? %>
-  <div class="card"><p style="margin:0"><%= @stylist.bio %></p></div>
+  <div class="card section"><p style="margin:0"><%= @stylist.bio %></p></div>
 <% end %>
 
 <div class="section">
-  <div class="section-head"><h2>Próximos turnos</h2></div>
+  <div class="section-head">
+    <h2>Próximos turnos</h2>
+    <%= link_to "+ Turno con #{@stylist.name.split.first}", new_admin_appointment_path(stylist_id: @stylist.id) %>
+  </div>
   <%= render "admin/appointments/table", appointments: @upcoming, empty_message: "Sin turnos próximos." %>
 </div>
