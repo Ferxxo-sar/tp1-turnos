@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  draw :madmin
   get "up" => "rails/health#show", as: :rails_health_check
 
   # Portal público y de clientes
