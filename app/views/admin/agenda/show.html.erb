@@ -1,0 +1,92 @@
+<% content_for :title, "Agenda" %>
+
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Agenda del día</span>
+    <h1><%= l(@date, format: :long).capitalize %></h1>
+  </div>
+  <div class="actions">
+    <%= link_to new_admin_appointment_path, class: "btn" do %>
+      <%= icon(:plus, size: 16) %> Nuevo turno
+    <% end %>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="agenda-nav">
+    <%= link_to admin_agenda_path(date: (@date - 1).iso8601, stylist_id: params[:stylist_id]), class: "btn sm secondary", aria: { label: "Día anterior" } do %>
+      <%= icon(:left, size: 15) %>
+    <% end %>
+    <%= link_to "Hoy", admin_agenda_path(stylist_id: params[:stylist_id]), class: "btn sm secondary" %>
+    <%= link_to admin_agenda_path(date: (@date + 1).iso8601, stylist_id: params[:stylist_id]), class: "btn sm secondary", aria: { label: "Día siguiente" } do %>
+      <%= icon(:right, size: 15) %>
+    <% end %>
+  </div>
+
+  <%= form_with url: admin_agenda_path, method: :get, class: "button-row" do |f| %>
+    <%= f.date_field :date, value: @date.iso8601, aria: { label: "Fecha" }, onchange: "this.form.requestSubmit()" %>
+    <%= f.select :stylist_id, options_from_collection_for_select(@all_stylists, :id, :name, params[:stylist_id]),
+          { include_blank: "Todos los profesionales" }, aria: { label: "Profesional" }, onchange: "this.form.requestSubmit()" %>
+  <% end %>
+</div>
+
+<p class="muted small">
+  <%= pluralize(@schedule.appointments_count, "turno activo", plural: "turnos activos") %>
+  <%= "· #{pluralize(@cancelled_count, 'cancelado', plural: 'cancelados')}" if @cancelled_count.positive? %>
+  <% if @date.sunday? %>· Los domingos el local no atiende.<% end %>
+  · Tocá un bloque libre para agendar.
+</p>
+
+<% if @schedule.stylists.empty? %>
+  <div class="card empty">No hay profesionales cargados. <%= link_to "Cargar el primero", new_admin_stylist_path %>.</div>
+<% else %>
+  <div class="agenda-wrap">
+    <div class="agenda" style="--cols: <%= @schedule.stylists.size %>; --rows: <%= @schedule.slots.size %>">
+      <div class="head corner" style="grid-column: 1"></div>
+      <% @schedule.stylists.each_with_index do |stylist, col| %>
+        <div class="head" style="grid-column: <%= col + 2 %>">
+          <%= avatar_for(stylist, size: "sm") %>
+          <span><%= link_to stylist.name, admin_stylist_path(stylist) %></span>
+        </div>
+      <% end %>
+
+      <% @schedule.slots.each_with_index do |slot, index| %>
+        <% half = slot.min.positive? %>
+        <div class="time <%= 'half' if half %>" style="grid-row: <%= index + 2 %>"><%= l(slot, format: :hour) unless half %></div>
+      <% end %>
+
+      <% @schedule.stylists.each_with_index do |stylist, col| %>
+        <% free = @schedule.free_rows_for(stylist) %>
+        <% @schedule.slots.each_with_index do |slot, index| %>
+          <% classes = [ "cell", ("half" if slot.min.positive?), ("past" if slot.past?) ].compact.join(" ") %>
+          <% position = "grid-column: #{col + 2}; grid-row: #{index + 2}" %>
+          <% if free.include?(index + 1) && slot.future? && !@date.sunday? %>
+            <%= link_to "", new_admin_appointment_path(stylist_id: stylist.id, at: slot.strftime("%Y-%m-%dT%H:%M")),
+                  class: classes, style: position, title: "Nuevo turno #{l(slot, format: :hour)} con #{stylist.name}",
+                  aria: { label: "Nuevo turno #{l(slot, format: :hour)} con #{stylist.name}" } %>
+          <% else %>
+            <div class="<%= classes %>" style="<%= position %>"></div>
+          <% end %>
+        <% end %>
+
+        <% @schedule.entries_for(stylist).each do |entry| %>
+          <% appointment = entry.appointment %>
+          <%= link_to admin_appointment_path(appointment),
+                class: [ "appt-block", appointment.status, ("overlap" if entry.overlap) ],
+                style: "grid-column: #{col + 2}; grid-row: #{entry.row + 1} / span #{entry.span}",
+                title: "#{appointment.client.name} · #{appointment.status_label}" do %>
+            <span class="t"><%= l(appointment.scheduled_at, format: :hour) %>–<%= l(appointment.ends_at, format: :hour) %></span>
+            <strong><%= appointment.client.name %></strong>
+            <span class="s"><%= appointment.appointment_services.map { |item| item.service.name }.join(", ") %></span>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="legend muted" style="margin-top:12px">
+    <% %w[pending confirmed completed].each do |status| %>
+      <%= status_badge(status) %>
+    <% end %>
+  </div>
+<% end %>

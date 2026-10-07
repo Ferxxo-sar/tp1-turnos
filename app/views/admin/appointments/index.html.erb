@@ -1,15 +1,40 @@
 <% content_for :title, "Turnos" %>
 
 <div class="page-head">
-  <h1>Turnos</h1>
-  <div class="actions"><%= link_to "+ Nuevo turno", new_admin_appointment_path, class: "btn" %></div>
+  <div>
+    <span class="eyebrow">Operación</span>
+    <h1>Turnos</h1>
+  </div>
+  <div class="actions">
+    <%= link_to admin_appointments_path(request.query_parameters.except("page").merge(format: :csv)), class: "btn secondary" do %>
+      <%= icon(:download, size: 16) %> Exportar CSV
+    <% end %>
+    <%= link_to new_admin_appointment_path, class: "btn" do %>
+      <%= icon(:plus, size: 16) %> Nuevo turno
+    <% end %>
+  </div>
 </div>
 
 <%= form_with url: admin_appointments_path, method: :get, class: "filters" do |f| %>
-  <div class="field">
-    <%= f.label :date, "Fecha" %>
-    <%= f.date_field :date, value: params[:date] %>
+  <div class="field wide">
+    <%= f.label :q, "Cliente" %>
+    <%= f.search_field :q, value: params[:q], placeholder: "Nombre, email o teléfono" %>
   </div>
+  <% if params[:date].present? %>
+    <div class="field">
+      <%= f.label :date, "Día" %>
+      <%= f.date_field :date, value: params[:date] %>
+    </div>
+  <% else %>
+    <div class="field">
+      <%= f.label :from, "Desde" %>
+      <%= f.date_field :from, value: params[:from] %>
+    </div>
+    <div class="field">
+      <%= f.label :to, "Hasta" %>
+      <%= f.date_field :to, value: params[:to] %>
+    </div>
+  <% end %>
   <div class="field">
     <%= f.label :stylist_id, "Profesional" %>
     <%= f.select :stylist_id, options_from_collection_for_select(@stylists, :id, :name, params[:stylist_id]), include_blank: "Todos" %>
@@ -18,8 +43,24 @@
     <%= f.label :status, "Estado" %>
     <%= f.select :status, options_for_select(Appointment::STATUSES.map { |s| [ Appointment.status_label(s), s ] }, params[:status]), include_blank: "Todos" %>
   </div>
-  <%= f.submit "Filtrar", name: nil, class: "btn secondary" %>
-  <%= link_to "Limpiar", admin_appointments_path, class: "btn secondary" %>
+  <div class="button-row">
+    <%= f.submit "Filtrar", name: nil, class: "btn" %>
+    <%= link_to "Limpiar", admin_appointments_path, class: "btn secondary" %>
+  </div>
 <% end %>
 
+<div class="toolbar">
+  <div class="tabs" style="margin:0; border:0">
+    <%= link_to "Todos", admin_appointments_path(request.query_parameters.except("status", "page")), class: ("active" if params[:status].blank?) %>
+    <% Appointment::STATUSES.each do |status| %>
+      <%= link_to Appointment.status_label(status), admin_appointments_path(request.query_parameters.except("page").merge("status" => status)),
+            class: ("active" if params[:status] == status) %>
+    <% end %>
+  </div>
+  <span class="muted small">
+    <%= pluralize(@pagination[:total], "turno") %> · <strong><%= money(@total_amount) %></strong> sin contar cancelados
+  </span>
+</div>
+
 <%= render "table", appointments: @appointments, empty_message: "No hay turnos con esos filtros." %>
+<%= render "admin/shared/pagination" %>

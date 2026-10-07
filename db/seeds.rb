@@ -40,7 +40,11 @@ end
 
 clients = [
   [ "Juan López", "juan@mail.com", "1122334455" ],
-  [ "María Díaz", "maria@mail.com", "1155667788" ]
+  [ "María Díaz", "maria@mail.com", "1155667788" ],
+  [ "Sofía Ruiz", "sofia@mail.com", "1144556677" ],
+  [ "Martín Cruz", "martin@mail.com", "1133221100" ],
+  [ "Valentina Sosa", "valen@mail.com", "1166778899" ],
+  [ "Diego Romero", "diego@mail.com", nil ]
 ].map do |name, email, phone|
   client = Client.find_or_initialize_by(email: email)
   client.update!(name: name, phone: phone, password: "cliente123")
@@ -63,6 +67,45 @@ if Appointment.none?
       services.values_at(*service_names).map(&:id)
     )
     appointment.save!
+  end
+
+  # Historial del mes y del anterior, para que el dashboard y los reportes
+  # tengan datos. Un turno no se puede crear en el pasado, así que se crea a
+  # futuro y después se mueve la fecha sin validar.
+  history = Random.new(42)
+  first_day = Date.current.prev_month.beginning_of_month
+  (first_day...Date.current).each do |date|
+    next if date.sunday?
+
+    history.rand(1..3).times do
+      appointment = Appointment.build_booking(
+        { client: clients.sample(random: history), stylist: stylists.sample(random: history),
+          scheduled_at: 1.year.from_now.change(hour: history.rand(9..18)), status: "pending" },
+        services.values.sample(history.rand(1..2), random: history).map(&:id)
+      )
+      next unless appointment.save
+
+      appointment.update_columns(
+        scheduled_at: date.in_time_zone.change(hour: history.rand(9..18), min: [ 0, 30 ].sample(random: history)),
+        status: history.rand < 0.85 ? "completed" : "cancelled"
+      )
+    end
+  end
+
+  # Agenda de la próxima semana.
+  (Date.current..(Date.current + 6)).each do |date|
+    next if date.sunday?
+
+    history.rand(3..6).times do
+      time = date.in_time_zone.change(hour: history.rand(9..18), min: [ 0, 30 ].sample(random: history))
+      next if time.past?
+
+      Appointment.build_booking(
+        { client: clients.sample(random: history), stylist: stylists.sample(random: history),
+          scheduled_at: time, status: history.rand < 0.6 ? "confirmed" : "pending" },
+        services.values.sample(history.rand(1..2), random: history).map(&:id)
+      ).save
+    end
   end
 end
 

@@ -2,8 +2,9 @@
 
 <div class="page-head">
   <div>
-    <p style="margin:0"><%= link_to "← Turnos", admin_appointments_path %></p>
-    <h1>Turno #<%= @appointment.id %> <%= status_badge(@appointment.status) %></h1>
+    <%= link_to "← Turnos", admin_appointments_path, class: "back-link" %>
+    <h1>Turno #<%= @appointment.id %></h1>
+    <%= status_badge(@appointment.status) %>
   </div>
   <div class="actions">
     <%= link_to "Editar", edit_admin_appointment_path(@appointment), class: "btn secondary" %>
@@ -22,12 +23,16 @@
         <%= link_to @appointment.client.name, admin_client_path(@appointment.client) %><br>
         <span class="muted small"><%= @appointment.client.email %><%= " · #{@appointment.client.phone}" if @appointment.client.phone.present? %></span>
       </dd>
-      <dt>Profesional</dt><dd><%= link_to @appointment.stylist.name, admin_stylist_path(@appointment.stylist) %></dd>
+      <dt>Profesional</dt>
+      <dd>
+        <%= link_to @appointment.stylist.name, admin_stylist_path(@appointment.stylist) %>
+        · <%= link_to "ver agenda del día", admin_agenda_path(date: @appointment.scheduled_at.to_date.iso8601, stylist_id: @appointment.stylist_id), class: "small" %>
+      </dd>
       <dt>Notas</dt><dd><%= @appointment.notes.presence || tag.span("—", class: "muted") %></dd>
       <dt>Creado</dt><dd class="muted"><%= l(@appointment.created_at) %></dd>
     </dl>
 
-    <div class="button-row" style="margin-top:20px">
+    <div class="button-row form-section" style="margin-top:20px">
       <span class="label">Cambiar estado:</span>
       <% (Appointment::STATUSES - [ @appointment.status ]).each do |status| %>
         <%= button_to Appointment.status_label(status), admin_appointment_path(@appointment), method: :patch,

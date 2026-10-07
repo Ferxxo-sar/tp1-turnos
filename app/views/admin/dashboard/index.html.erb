@@ -2,33 +2,68 @@
 
 <div class="page-head">
   <div>
-    <h1>Hola, <%= current_admin.name.split.first %> 👋</h1>
-    <p class="muted" style="margin:0"><%= l(Date.current, format: :long).capitalize %></p>
+    <span class="eyebrow"><%= l(Date.current, format: :long).capitalize %></span>
+    <h1>Hola, <%= current_admin.name.split.first %></h1>
   </div>
   <div class="actions">
-    <%= link_to "+ Nuevo turno", new_admin_appointment_path, class: "btn" %>
+    <%= link_to "Ver agenda", admin_agenda_path, class: "btn secondary" %>
+    <%= link_to new_admin_appointment_path, class: "btn" do %>
+      <%= icon(:plus, size: 16) %> Nuevo turno
+    <% end %>
   </div>
 </div>
 
 <div class="grid grid-4">
-  <div class="card stat"><span class="label">Turnos hoy</span><span class="value"><%= @stats[:today] %></span></div>
-  <div class="card stat"><span class="label">Pendientes de confirmar</span><span class="value"><%= @stats[:pending] %></span></div>
-  <div class="card stat"><span class="label">Turnos esta semana</span><span class="value"><%= @stats[:week] %></span></div>
-  <div class="card stat"><span class="label">Facturado en el mes</span><span class="value"><%= money(@month_revenue) %></span></div>
+  <%= link_to admin_agenda_path, class: "card stat accent", style: "color:inherit; text-decoration:none" do %>
+    <span class="label">Turnos hoy</span><span class="value"><%= @stats[:today] %></span>
+  <% end %>
+  <%= link_to admin_appointments_path(status: "pending"), class: "card stat", style: "color:inherit; text-decoration:none" do %>
+    <span class="label">Pendientes de confirmar</span><span class="value"><%= @stats[:pending] %></span>
+  <% end %>
+  <div class="card stat">
+    <span class="label">Facturado en el mes</span>
+    <span class="value"><%= money(@report.revenue, precision: 0) %></span>
+    <%= delta_tag(@report.revenue, @previous_revenue) %>
+  </div>
+  <div class="card stat">
+    <span class="label">A cobrar este mes</span>
+    <span class="value"><%= money(@report.expected_revenue, precision: 0) %></span>
+    <span class="delta"><%= pluralize(@stats[:week], "turno") %> esta semana</span>
+  </div>
 </div>
 
-<div class="section">
-  <div class="section-head">
-    <h2>Agenda de hoy</h2>
-    <%= link_to "Ver todos", admin_appointments_path(date: Date.current.iso8601) %>
+<div class="layout-2-1 section">
+  <div>
+    <div class="section-head">
+      <h2>Agenda de hoy</h2>
+      <%= link_to "Ver en grilla →", admin_agenda_path %>
+    </div>
+    <%= render "admin/appointments/table", appointments: @today, empty_message: "No hay turnos para hoy." %>
   </div>
-  <%= render "admin/appointments/table", appointments: @today, empty_message: "No hay turnos para hoy." %>
+
+  <aside class="card">
+    <div class="card-title">
+      <h3>Próximos 7 días</h3>
+      <span class="muted small"><%= pluralize(@next_days.values.sum, "turno") %></span>
+    </div>
+    <% max = [ @next_days.values.max, 1 ].max %>
+    <div class="bars">
+      <% @next_days.each do |day, count| %>
+        <%= link_to admin_agenda_path(date: day.iso8601), class: [ "bar", ("today" if day == Date.current) ], style: "text-decoration:none", title: "#{l(day, format: :long)}: #{count}" do %>
+          <span class="n"><%= count %></span>
+          <span class="fill" style="height: <%= (count * 100.0 / max).round %>%"></span>
+          <span class="d"><%= l(day, format: "%a %-d") %></span>
+        <% end %>
+      <% end %>
+    </div>
+    <p class="hint" style="margin:12px 0 0"><%= pluralize(@stats[:clients], "cliente registrado", plural: "clientes registrados") %> · <%= link_to "Ver reportes", admin_reports_path %></p>
+  </aside>
 </div>
 
 <div class="section">
   <div class="section-head">
     <h2>Pendientes de confirmar</h2>
-    <%= link_to "Ver todos", admin_appointments_path(status: "pending") %>
+    <%= link_to "Ver todos →", admin_appointments_path(status: "pending") %>
   </div>
-  <%= render "admin/appointments/table", appointments: @pending, empty_message: "No hay turnos pendientes. 🎉" %>
+  <%= render "admin/appointments/table", appointments: @pending, empty_message: "No hay turnos pendientes." %>
 </div>

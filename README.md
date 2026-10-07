@@ -16,7 +16,7 @@ La definición funcional completa está en [DEFINICION.md](DEFINICION.md).
 |---|---|
 | Modelos, migraciones y validaciones | Implementado |
 | Portal de clientes (registro, login, reserva con horarios libres, mis turnos, cancelar) | Implementado |
-| Back-office `/admin` (dashboard, CRUD de turnos, profesionales, servicios, categorías, clientes) | Implementado |
+| Back-office `/admin` (dashboard, agenda, turnos, clientes, catálogo, reportes, administradores) | Implementado |
 | API `/api/v1` con login por token | Implementado |
 | Active Storage (foto del profesional) | Implementado |
 | Action Mailer (email de confirmación al reservar) | Implementado |
@@ -42,8 +42,17 @@ La app es genérica: el nombre del negocio se configura con la variable de entor
 | `/registro`, `/ingresar` | Alta y login de clientes |
 | `/mis-turnos` | Próximos turnos e historial del cliente |
 | `/mis-turnos/new` | Reserva: servicios, profesional, fecha y horario (se cargan desde la API) |
-| `/admin` | Dashboard: agenda del día, pendientes, métricas |
-| `/admin/turnos` | Turnos con filtros por fecha, profesional y estado |
+| `/admin` | Dashboard: agenda del día, pendientes, facturación del mes, próximos 7 días |
+| `/admin/agenda` | Grilla del día (profesionales × horarios); un bloque libre abre "nuevo turno" precargado |
+| `/admin/turnos` | Turnos con búsqueda por cliente, rango de fechas, profesional y estado; paginado y exportable a CSV |
+| `/admin/clientes` | ABM de clientes (alta desde mostrador), historial y métricas por cliente |
+| `/admin/profesionales`, `/admin/servicios`, `/admin/categorias` | Catálogo, con turnos y reservas por ítem |
+| `/admin/reportes` | Reporte mensual: facturado, a cobrar, ticket promedio, turnos por día y estado, ranking de profesionales y servicios |
+| `/admin/administradores` | ABM de usuarios del back-office (nadie puede borrarse a sí mismo) |
+
+El diseño sigue el sistema visual de Merkén: papel cálido, tinta oscura y acento terracota, con
+Instrument Serif para títulos, Syne para texto y DM Mono para datos. Todo vive en
+`app/assets/stylesheets/application.css`, sin frameworks.
 
 Horario de atención: lunes a sábado de 9 a 19, en bloques de 30 minutos (`Stylist::OPENING_HOUR`,
 `CLOSING_HOUR`, `SLOT_MINUTES`).

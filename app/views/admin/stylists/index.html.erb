@@ -1,8 +1,15 @@
 <% content_for :title, "Profesionales" %>
 
 <div class="page-head">
-  <h1>Profesionales</h1>
-  <div class="actions"><%= link_to "+ Nuevo profesional", new_admin_stylist_path, class: "btn" %></div>
+  <div>
+    <span class="eyebrow">Catálogo</span>
+    <h1>Profesionales</h1>
+  </div>
+  <div class="actions">
+    <%= link_to new_admin_stylist_path, class: "btn" do %>
+      <%= icon(:plus, size: 16) %> Nuevo profesional
+    <% end %>
+  </div>
 </div>
 
 <% if @stylists.any? %>
@@ -16,8 +23,10 @@
             <span class="muted small"><%= stylist.specialty %></span>
           </div>
         </div>
+        <p class="small muted"><%= pluralize(@upcoming_counts.fetch(stylist.id, 0), "turno próximo", plural: "turnos próximos") %></p>
         <div class="actions button-row">
-          <%= link_to "Agenda", admin_stylist_path(stylist), class: "btn sm secondary" %>
+          <%= link_to "Agenda", admin_agenda_path(stylist_id: stylist.id), class: "btn sm secondary" %>
+          <%= link_to "Ficha", admin_stylist_path(stylist), class: "btn sm secondary" %>
           <%= link_to "Editar", edit_admin_stylist_path(stylist), class: "btn sm secondary" %>
         </div>
       </article>

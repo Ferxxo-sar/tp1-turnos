@@ -1,3 +1,8 @@
 <% content_for :title, "Editar profesional" %>
-<div class="page-head"><h1>Editar <%= @stylist.name_was %></h1></div>
+<div class="page-head">
+  <div>
+    <%= link_to "← #{@stylist.name_was}", admin_stylist_path(@stylist), class: "back-link" %>
+    <h1>Editar profesional</h1>
+  </div>
+</div>
 <%= render "form", stylist: @stylist %>

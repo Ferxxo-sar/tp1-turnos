@@ -1,0 +1,8 @@
+<% content_for :title, "Editar cliente" %>
+<div class="page-head">
+  <div>
+    <%= link_to "← #{@client.name_was}", admin_client_path(@client), class: "back-link" %>
+    <h1>Editar cliente</h1>
+  </div>
+</div>
+<%= render "form", client: @client %>

@@ -1,0 +1,33 @@
+<%= form_with model: [ :admin, client ], class: "form card" do |f| %>
+  <%= error_messages_for(client) %>
+
+  <div class="form-row">
+    <div class="field">
+      <%= f.label :name %>
+      <%= f.text_field :name, required: true, autocomplete: "off" %>
+    </div>
+    <div class="field">
+      <%= f.label :phone %>
+      <%= f.telephone_field :phone, autocomplete: "off" %>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <%= f.label :email %>
+      <%= f.email_field :email, required: true, autocomplete: "off" %>
+    </div>
+    <div class="field">
+      <%= f.label :password, client.new_record? ? "Contraseña (opcional)" : "Nueva contraseña" %>
+      <%= f.password_field :password, autocomplete: "new-password" %>
+      <span class="hint">
+        <%= client.new_record? ? "Si la dejás vacía se genera una al azar; el cliente puede pedir que se la cambien." : "Dejala vacía para conservar la actual." %>
+      </span>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <%= link_to "Cancelar", client.persisted? ? admin_client_path(client) : admin_clients_path, class: "btn secondary" %>
+    <%= f.submit "Guardar", class: "btn" %>
+  </div>
+<% end %>

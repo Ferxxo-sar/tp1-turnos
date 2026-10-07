@@ -1,0 +1,8 @@
+<% content_for :title, "Editar administrador" %>
+<div class="page-head">
+  <div>
+    <%= link_to "← Administradores", admin_admin_users_path, class: "back-link" %>
+    <h1>Editar <%= @admin_user.name_was %></h1>
+  </div>
+</div>
+<%= render "form", admin_user: @admin_user %>

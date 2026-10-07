@@ -16,11 +16,17 @@
         <tbody>
           <% appointments.each do |appointment| %>
             <tr>
-              <td class="nowrap"><%= link_to l(appointment.scheduled_at, format: :short), admin_appointment_path(appointment) %></td>
-              <td><%= link_to appointment.client.name, admin_client_path(appointment.client) %></td>
+              <td class="nowrap">
+                <%= link_to l(appointment.scheduled_at, format: :short), admin_appointment_path(appointment) %>
+                <div class="muted small"><%= l(appointment.scheduled_at.to_date, format: "%A").capitalize %></div>
+              </td>
+              <td>
+                <%= link_to appointment.client.name, admin_client_path(appointment.client) %>
+                <% if appointment.client.phone.present? %><div class="muted small mono"><%= appointment.client.phone %></div><% end %>
+              </td>
               <td><%= appointment.stylist.name %></td>
               <td class="small"><%= appointment.appointment_services.map { |item| item.service.name }.join(", ") %></td>
-              <td class="right nowrap"><%= money(appointment.total) %></td>
+              <td class="num"><%= money(appointment.total) %></td>
               <td><%= status_badge(appointment.status) %></td>
               <td class="actions">
                 <% if appointment.status == "pending" %>

@@ -1,8 +1,22 @@
 <% content_for :title, "Servicios" %>
 
 <div class="page-head">
-  <h1>Servicios</h1>
-  <div class="actions"><%= link_to "+ Nuevo servicio", new_admin_service_path, class: "btn" %></div>
+  <div>
+    <span class="eyebrow">Catálogo</span>
+    <h1>Servicios</h1>
+  </div>
+  <div class="actions">
+    <%= link_to new_admin_service_path, class: "btn" do %>
+      <%= icon(:plus, size: 16) %> Nuevo servicio
+    <% end %>
+  </div>
+</div>
+
+<div class="tabs">
+  <%= link_to "Todas", admin_services_path, class: ("active" if params[:category_id].blank?) %>
+  <% @categories.each do |category| %>
+    <%= link_to category.name, admin_services_path(category_id: category.id), class: ("active" if params[:category_id] == category.id.to_s) %>
+  <% end %>
 </div>
 
 <div class="card flush">
@@ -10,7 +24,7 @@
     <div class="table-wrap">
       <table class="table">
         <thead>
-          <tr><th>Servicio</th><th>Categoría</th><th>Duración</th><th class="right">Precio</th><th></th></tr>
+          <tr><th>Servicio</th><th>Categoría</th><th>Duración</th><th class="right">Precio</th><th class="right">Reservas</th><th></th></tr>
         </thead>
         <tbody>
           <% @services.each do |service| %>
@@ -21,11 +35,16 @@
               </td>
               <td><span class="tag"><%= service.category.name %></span></td>
               <td class="nowrap"><%= duration(service.duration_minutes) %></td>
-              <td class="right nowrap"><%= money(service.price) %></td>
+              <td class="num"><%= money(service.price) %></td>
+              <td class="num"><%= @booking_counts.fetch(service.id, 0) %></td>
               <td class="actions">
                 <%= link_to "Editar", edit_admin_service_path(service), class: "btn sm secondary" %>
-                <%= button_to "Eliminar", admin_service_path(service), method: :delete, class: "sm danger",
-                      form: { data: { turbo_confirm: "¿Eliminar #{service.name}?" } } %>
+                <% if @used_service_ids.include?(service.id) %>
+                  <span class="muted small" title="Está incluido en turnos: no se puede eliminar">En uso</span>
+                <% else %>
+                  <%= button_to "Eliminar", admin_service_path(service), method: :delete, class: "sm danger",
+                        form: { data: { turbo_confirm: "¿Eliminar #{service.name}?" } } %>
+                <% end %>
               </td>
             </tr>
           <% end %>
@@ -33,6 +52,6 @@
       </table>
     </div>
   <% else %>
-    <div class="empty">Todavía no hay servicios.</div>
+    <div class="empty">No hay servicios en esta categoría.</div>
   <% end %>
 </div>

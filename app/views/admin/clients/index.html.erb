@@ -1,27 +1,45 @@
 <% content_for :title, "Clientes" %>
 
-<div class="page-head"><h1>Clientes</h1></div>
+<div class="page-head">
+  <div>
+    <span class="eyebrow">Operación</span>
+    <h1>Clientes</h1>
+  </div>
+  <div class="actions">
+    <%= link_to new_admin_client_path, class: "btn" do %>
+      <%= icon(:plus, size: 16) %> Nuevo cliente
+    <% end %>
+  </div>
+</div>
 
 <%= form_with url: admin_clients_path, method: :get, class: "filters" do |f| %>
-  <div class="field">
+  <div class="field wide">
     <%= f.label :q, "Buscar" %>
-    <%= f.search_field :q, value: params[:q], placeholder: "Nombre o email" %>
+    <%= f.search_field :q, value: params[:q], placeholder: "Nombre, email o teléfono" %>
   </div>
-  <%= f.submit "Buscar", name: nil, class: "btn secondary" %>
+  <div class="button-row">
+    <%= f.submit "Buscar", name: nil, class: "btn" %>
+    <%= link_to "Limpiar", admin_clients_path, class: "btn secondary" if params[:q].present? %>
+  </div>
 <% end %>
 
 <div class="card flush">
   <% if @clients.any? %>
     <div class="table-wrap">
       <table class="table">
-        <thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Alta</th></tr></thead>
+        <thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th class="right">Turnos</th><th>Alta</th><th></th></tr></thead>
         <tbody>
           <% @clients.each do |client| %>
             <tr>
-              <td><%= link_to client.name, admin_client_path(client) %></td>
-              <td><%= client.email %></td>
-              <td><%= client.phone.presence || "—" %></td>
-              <td class="muted"><%= l(client.created_at.to_date) %></td>
+              <td><strong><%= link_to client.name, admin_client_path(client) %></strong></td>
+              <td><%= mail_to client.email %></td>
+              <td class="mono small"><%= client.phone.presence || "—" %></td>
+              <td class="num"><%= @appointment_counts.fetch(client.id, 0) %></td>
+              <td class="muted small nowrap"><%= l(client.created_at.to_date) %></td>
+              <td class="actions">
+                <%= link_to "Nuevo turno", new_admin_appointment_path(client_id: client.id), class: "btn sm secondary" %>
+                <%= link_to "Editar", edit_admin_client_path(client), class: "btn sm secondary" %>
+              </td>
             </tr>
           <% end %>
         </tbody>
@@ -31,3 +49,4 @@
     <div class="empty">No se encontraron clientes.</div>
   <% end %>
 </div>
+<%= render "admin/shared/pagination" %>
