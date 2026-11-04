@@ -4,11 +4,15 @@ module Api
       include ActionController::HttpAuthentication::Token::ControllerMethods
 
       rescue_from ActiveRecord::RecordNotFound do
-        render json: { error: "No encontrado" }, status: :not_found
+        render_error "No encontrado", :not_found
       end
 
       rescue_from ActionController::ParameterMissing do |error|
-        render json: { error: error.message }, status: :bad_request
+        render_error "Falta el parámetro: #{error.param}", :bad_request
+      end
+
+      rescue_from ActionDispatch::Http::Parameters::ParseError do
+        render_error "El cuerpo de la petición no es un JSON válido", :bad_request
       end
 
       private
@@ -21,11 +25,36 @@ module Api
         end
         return if @current_client
 
-        render json: { error: "Token inválido o ausente" }, status: :unauthorized
+        render_error "Token inválido o ausente", :unauthorized
+      end
+
+      # Todos los errores tienen `error` (mensaje general); los de validación
+      # suman `errors` con los mensajes completos por campo.
+      def render_error(message, status)
+        render json: { error: message }, status: status
       end
 
       def render_errors(record)
-        render json: { errors: record.errors.to_hash(true) }, status: :unprocessable_content
+        render json: { error: "Revisá los datos ingresados", errors: record.errors.to_hash(true) },
+               status: :unprocessable_content
+      end
+
+      def parse_date(value)
+        Date.iso8601(value.to_s)
+      rescue Date::Error
+        nil
+      end
+
+      def slots_json(date, duration, slots)
+        { date: date.iso8601, duration_minutes: duration, slots: slots.map { |slot| slot.strftime("%H:%M") } }
+      end
+
+      def client_json(client)
+        { id: client.id, name: client.name, email: client.email, phone: client.phone }
+      end
+
+      def session_json(client)
+        { token: client.api_token, client: client_json(client) }
       end
 
       def category_json(category)
@@ -59,6 +88,9 @@ module Api
           scheduled_at: appointment.scheduled_at.iso8601,
           ends_at: appointment.ends_at.iso8601,
           status: appointment.status,
+          status_label: appointment.status_label,
+          duration_minutes: appointment.duration_minutes,
+          cancellable: appointment.cancellable?,
           notes: appointment.notes,
           total: appointment.total.to_f,
           stylist: { id: appointment.stylist.id, name: appointment.stylist.name },

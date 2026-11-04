@@ -8,6 +8,7 @@ class Client < ApplicationRecord
   validates :name, presence: true
   validates :email, presence: true, uniqueness: { case_sensitive: false },
                      format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :password, length: { minimum: 8 }, allow_nil: true
   validates :api_token, uniqueness: true, allow_nil: true
 
   def regenerate_api_token!
