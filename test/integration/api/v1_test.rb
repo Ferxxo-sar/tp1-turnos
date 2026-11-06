@@ -45,7 +45,7 @@ class Api::V1Test < ActionDispatch::IntegrationTest
   end
 
   test "reservar un turno" do
-    time = 5.days.from_now.change(hour: 14)
+    time = business_time(5, hour: 14)
     assert_difference "Appointment.count", 1 do
       post "/api/v1/appointments", headers: auth, as: :json, params: {
         appointment: { stylist_id: stylists(:two).id, scheduled_at: time.iso8601, service_ids: [ services(:one).id ] }

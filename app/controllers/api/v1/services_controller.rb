@@ -4,6 +4,7 @@ module Api
       def index
         services = Service.includes(:category).alphabetical
         services = services.where(category_id: params[:category_id]) if params[:category_id].present?
+        services = services.where("services.name LIKE ?", "%#{Service.sanitize_sql_like(params[:q].strip)}%") if params[:q].present?
         render json: services.map { |service| service_json(service) }
       end
 

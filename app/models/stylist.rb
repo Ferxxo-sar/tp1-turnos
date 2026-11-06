@@ -13,21 +13,32 @@ class Stylist < ApplicationRecord
   scope :alphabetical, -> { order(:name) }
 
   # Horarios libres del día, en bloques de SLOT_MINUTES dentro del horario de
-  # atención. Los domingos no se atiende.
-  def available_slots(date)
+  # atención. Un horario está libre si entra completo un turno de `duration`
+  # minutos sin superponerse con otro turno activo; `except` excluye un turno
+  # (para reprogramarlo sin que se bloquee a sí mismo). Los domingos no se atiende.
+  def available_slots(date, duration: SLOT_MINUTES, except: nil)
     return [] if date.sunday?
 
     day = date.in_time_zone
-    taken = appointments.where.not(status: "cancelled").where(scheduled_at: day.all_day).pluck(:scheduled_at)
+    busy = busy_ranges(day, except: except)
+    closing = day.change(hour: CLOSING_HOUR)
 
     slot = day.change(hour: OPENING_HOUR)
-    closing = day.change(hour: CLOSING_HOUR)
     slots = []
-    while slot < closing
-      slots << slot if slot.future? && taken.none? { |time| time == slot }
+    while slot + duration.minutes <= closing
+      finish = slot + duration.minutes
+      slots << slot if slot.future? && busy.none? { |range| range.begin < finish && slot < range.end }
       slot += SLOT_MINUTES.minutes
     end
     slots
+  end
+
+  # Franjas ocupadas por turnos no cancelados en el día de `time`.
+  def busy_ranges(time, except: nil)
+    appointments.where.not(status: "cancelled").where.not(id: except)
+                .where(scheduled_at: time.all_day)
+                .includes(appointment_services: :service)
+                .map(&:time_range)
   end
 
   def initials

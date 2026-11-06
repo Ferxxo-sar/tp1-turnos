@@ -2,22 +2,27 @@ module Api
   module V1
     class StylistsController < BaseController
       def index
-        render json: Stylist.alphabetical.with_attached_photo.map { |stylist| stylist_json(stylist) }
+        stylists = Stylist.alphabetical.with_attached_photo
+        if params[:q].present?
+          term = "%#{Stylist.sanitize_sql_like(params[:q].strip)}%"
+          stylists = stylists.where("name LIKE :term OR specialty LIKE :term", term: term)
+        end
+        render json: stylists.map { |stylist| stylist_json(stylist) }
       end
 
       def show
         render json: stylist_json(Stylist.find(params[:id]))
       end
 
-      # GET /api/v1/stylists/:id/availability?date=2026-10-01
+      # GET /api/v1/stylists/:id/availability?date=2026-10-01&service_ids[]=1
+      # Con service_ids solo devuelve los horarios donde entra la duración total.
       def availability
         stylist = Stylist.find(params[:id])
-        date = Date.iso8601(params[:date].to_s)
-        slots = stylist.available_slots(date)
+        date = parse_date(params[:date])
+        return render_error("Fecha inválida, usar formato AAAA-MM-DD", :bad_request) unless date
 
-        render json: { date: date.iso8601, slots: slots.map { |slot| slot.strftime("%H:%M") } }
-      rescue Date::Error
-        render json: { error: "Fecha inválida, usar formato AAAA-MM-DD" }, status: :bad_request
+        duration = [ Service.where(id: Array(params[:service_ids])).sum(:duration_minutes), Stylist::SLOT_MINUTES ].max
+        render json: slots_json(date, duration, stylist.available_slots(date, duration: duration))
       end
     end
   end

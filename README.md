@@ -1,6 +1,38 @@
-# TP1 Programación IV — Sistema de turnos
+# Programación IV — Sistema de turnos (back-end)
 
 Backend en Ruby on Rails para un sistema de gestión de turnos de peluquería / centro de estética.
+
+## TP 2 — Integración back-end y front-end
+
+| | |
+|---|---|
+| Temática | Turnos online para una peluquería / centro de estética |
+| Integrantes | Fernando Sarquis · Juan Cruz Bueno |
+| Modalidad | Grupo (2 personas) |
+| Autor del back-end original | Fernando Sarquis (TP 1) |
+| Responsables | Back-end: Fernando Sarquis · Front-end: Juan Cruz Bueno |
+| Front-end | Vue 3 + Vite (JavaScript), repositorio aparte: <https://github.com/Juanc-Bueno/tp2-turnos-front> |
+| Contrato de la API | [docs/API.md](docs/API.md) |
+| Deploy | No realizado |
+
+El back-office en Rails (`/admin`) sigue funcionando igual: la administración y la interfaz del
+cliente son dos contextos separados. El front-end de clientes consume solo `/api/v1`.
+
+Cambios del back-end en el TP 2:
+
+- **CORS** (`rack-cors`) para que el front, en otro origen, consuma `/api/*`.
+- **Endpoints nuevos**: registro (`POST /register`), perfil (`GET/PATCH /me`, `PATCH /me/password`),
+  reprogramar turno (`PATCH /appointments/:id/reschedule` y `GET /appointments/:id/availability`),
+  filtro `scope` en `GET /appointments`, búsqueda `q` en servicios y profesionales, y `service_ids[]`
+  en la disponibilidad para calcular horarios según la duración.
+- **Errores uniformes**: toda respuesta de error trae `error`; las de validación suman `errors` por
+  campo. Un JSON mal formado responde `400` en JSON.
+- **Correcciones del TP 1**: la superposición de turnos ahora se valida por rango (inicio + duración
+  de los servicios) y no por hora exacta; los turnos tienen que caer de lunes a sábado, dentro del
+  horario de atención y en bloques de 30 minutos (antes la API aceptaba cualquier hora); contraseña
+  de clientes de al menos 8 caracteres.
+- **Tests** de todos los endpoints nuevos y de las reglas de negocio (`test/integration/api/`,
+  `test/models/`).
 
 Los clientes reservan turnos online para servicios específicos (corte, color, manicura, etc.) con un
 estilista determinado. El personal del local administra estilistas, servicios, categorías y la agenda
@@ -22,6 +54,8 @@ La definición funcional completa está en [DEFINICION.md](DEFINICION.md).
 | Action Mailer (email de confirmación al reservar) | Implementado |
 | Seeds (`db/seeds.rb`) | Implementado |
 | Tests de modelos, integración, API y mailer | Implementado |
+| CORS, registro, perfil y reprogramación por API (TP 2) | Implementado |
+| Contrato de la API ([docs/API.md](docs/API.md)) | Implementado |
 
 La app es genérica: el nombre del negocio se configura con la variable de entorno `BUSINESS_NAME`
 (por defecto "Estudio Turnos") y en el front el estilista se muestra como "Profesional".
@@ -75,7 +109,8 @@ En desarrollo los emails no se envían: se guardan en `tmp/mails/`.
 
 ## Puesta en marcha
 
-Requisitos: Ruby 3.3.12 instalado (la versión está fijada en `.ruby-version`).
+Requisitos: Ruby 3.3.12 (fijada en `.ruby-version`), Bundler y SQLite 3. Versiones usadas:
+Rails 8.1.3, Ruby 3.3.12.
 
 ```bash
 # 1. Instalar dependencias
@@ -91,7 +126,29 @@ bin/rails server
 La aplicación queda en `http://localhost:3000`.
 
 Para verificar que arrancó bien: `http://localhost:3000/up` debe responder `200`.
-Cualquier otra URL va a dar `404` hasta que se definan las rutas.
+
+Para que el front-end funcione, el back-end tiene que estar corriendo en el puerto 3000 (o ajustar
+`VITE_API_URL` en el front) y el origen del front tiene que estar en `CORS_ORIGINS`.
+
+### Variables de entorno
+
+Todas son opcionales en desarrollo. Ejemplo (sin secretos):
+
+```bash
+BUSINESS_NAME="Estudio Turnos"                                # nombre que se muestra en el portal y el back-office
+CORS_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"     # orígenes del front-end permitidos en /api/*
+MAILER_FROM="turnos@example.com"                               # remitente de los emails
+```
+
+### Sin Ruby instalado (Docker)
+
+Si no tenés Ruby en la máquina, se puede correr todo en un contenedor con la imagen oficial. En
+Windows, los binstubs de `bin/` pueden quedar con fin de línea CRLF: por eso se invocan con `ruby`.
+
+```bash
+docker run --rm -it -p 3000:3000 -v "$PWD:/app" -v tp1-gems:/usr/local/bundle -w /app ruby:3.3.12 \
+  bash -c "bundle install && ruby bin/rails db:setup && ruby bin/rails server -b 0.0.0.0"
+```
 
 ### Consola
 
@@ -108,11 +165,16 @@ Stylist.create!(name: "Ana Pérez", specialty: "Colorista")
 Client.create!(name: "Juan", email: "juan@mail.com", password: "secret123")
 ```
 
-### Tests
+### Tests y controles de calidad
 
 ```bash
-bin/rails test
+bin/rails test        # modelos, integración (portal, admin, API) y mailer
+bin/rubocop           # estilo (rubocop-rails-omakase)
+bin/brakeman          # análisis de seguridad
 ```
+
+Estado al cierre del TP 2: 94 tests sin fallas, RuboCop sin ofensas y Brakeman sin advertencias.
+En Windows los tests corren en serie (no hay `fork`); en Linux/macOS, en paralelo.
 
 ---
 
@@ -237,13 +299,11 @@ Estas reglas producen errores de validación. El frontend tiene que mostrarlos a
 Si `scheduled_at` es anterior al momento actual:
 `scheduled_at: "no puede ser en el pasado"`
 
-**2. Un estilista no puede tener dos turnos a la misma hora.**
-Se valida contra turnos del mismo estilista, en el mismo `scheduled_at`, cuyo estado no sea
-`cancelled`. Si hay conflicto:
+**2. Un estilista no puede tener dos turnos superpuestos.**
+Se valida contra los turnos activos (`pending` o `confirmed`) del mismo estilista, por rango: cada
+turno ocupa desde `scheduled_at` hasta `scheduled_at` + la suma de duraciones de sus servicios
+(mínimo 30 minutos). Si hay conflicto:
 `scheduled_at: "el estilista ya tiene un turno en ese horario"`
-
-Nota: la comparación es por horario exacto, no por rango. Dos turnos del mismo estilista a las 10:00
-y 10:15 no chocan aunque el servicio dure 30 minutos.
 
 **3. Un mismo servicio no puede repetirse dentro de un turno.**
 `service: "ya fue agregado a este turno"`
@@ -254,29 +314,22 @@ reserva. Si después el local cambia el precio, los turnos ya reservados mantien
 Para mostrar el total de un turno hay que sumar los `price_at_booking`, **no** los `price` actuales
 de los servicios.
 
+**5. El turno tiene que caer en el horario de atención.**
+Lunes a sábado, de 9 a 19, empezando en un bloque de 30 minutos y terminando antes del cierre.
+Mensajes: `"debe ser de lunes a sábado"`, `"debe estar dentro del horario de atención (9 a 19 hs)"`,
+`"debe coincidir con un bloque de 30 minutos"`.
+
 ---
 
 ## API
 
-Base: `/api/v1`. Autenticación por token: el login devuelve el `api_token`, que se manda en el header
-`Authorization: Bearer <api_token>`.
+Base: `/api/v1`. Autenticación por token: el login (o el registro) devuelve un token que se manda en
+el header `Authorization: Bearer <token>`.
 
-| Método | Endpoint | Auth | Descripción |
-|---|---|---|---|
-| `POST` | `/api/v1/login` | No | Body `{ email, password }`. Devuelve `{ token, client }` |
-| `DELETE` | `/api/v1/logout` | Sí | Invalida el token |
-| `GET` | `/api/v1/categories` | No | Listado de categorías (`/:id` incluye sus servicios) |
-| `GET` | `/api/v1/services` | No | Listado de servicios (filtro opcional `?category_id=`) |
-| `GET` | `/api/v1/stylists` | No | Listado de profesionales (con `photo_url`) |
-| `GET` | `/api/v1/stylists/:id/availability?date=AAAA-MM-DD` | No | Horarios libres del día |
-| `GET` | `/api/v1/appointments` | Sí | Turnos del cliente autenticado |
-| `GET` | `/api/v1/appointments/:id` | Sí | Detalle de un turno propio |
-| `POST` | `/api/v1/appointments` | Sí | Reservar. Body `{ appointment: { stylist_id, scheduled_at, service_ids: [], notes } }` |
-| `PATCH` | `/api/v1/appointments/:id/cancel` | Sí | Cancelar un turno propio futuro |
+El contrato completo (campos, validaciones, permisos, errores y ejemplos reproducibles con `curl`)
+está en **[docs/API.md](docs/API.md)**.
 
-Errores de validación: `422` con `{ "errors": { "scheduled_at": ["Fecha y hora no puede ser en el pasado"] } }`.
-
-Ejemplo:
+Ejemplo rápido:
 
 ```bash
 TOKEN=$(curl -s -X POST localhost:3000/api/v1/login -H 'Content-Type: application/json' \
@@ -295,5 +348,6 @@ db/migrate/          Migraciones
 db/schema.rb         Esquema actual de la base
 db/seeds.rb          Datos de prueba
 test/                Tests de modelos, integración, API y mailer
+docs/API.md          Contrato de la API para el front-end
 DEFINICION.md        Definición funcional del proyecto
 ```

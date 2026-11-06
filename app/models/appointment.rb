@@ -15,7 +15,8 @@ class Appointment < ApplicationRecord
   validates :scheduled_at, presence: true
   validates :status, inclusion: { in: STATUSES }
   validate :scheduled_at_cannot_be_in_the_past, if: :will_save_change_to_scheduled_at?
-  validate :stylist_must_be_available
+  validate :must_fit_business_hours, if: :will_save_change_to_scheduled_at?
+  validate :stylist_must_be_available, if: :schedule_changed?
   validate :must_include_services, if: :require_services
 
   after_create_commit :send_confirmation_email
@@ -58,6 +59,15 @@ class Appointment < ApplicationRecord
     scheduled_at + duration_minutes.minutes
   end
 
+  # Un turno sin servicios igual ocupa un bloque de la agenda.
+  def blocked_minutes
+    [ duration_minutes, Stylist::SLOT_MINUTES ].max
+  end
+
+  def time_range
+    scheduled_at...(scheduled_at + blocked_minutes.minutes)
+  end
+
   def cancellable?
     ACTIVE_STATUSES.include?(status) && scheduled_at.future?
   end
@@ -66,18 +76,45 @@ class Appointment < ApplicationRecord
     update!(status: "cancelled")
   end
 
+  # Mueve el turno a otro horario con el mismo profesional y servicios. Vuelve a
+  # quedar pendiente porque el local tiene que confirmar el horario nuevo.
+  def reschedule(new_time)
+    update(scheduled_at: new_time, status: "pending")
+  end
+
   private
 
-  # Un mismo estilista no puede tener dos turnos activos a la misma hora.
-  def stylist_must_be_available
-    return if stylist_id.blank? || scheduled_at.blank? || status == "cancelled"
+  def schedule_changed?
+    new_record? || will_save_change_to_scheduled_at? || will_save_change_to_stylist_id? || will_save_change_to_status?
+  end
 
-    conflict = Appointment.where(stylist_id: stylist_id, scheduled_at: scheduled_at)
-                           .where.not(id: id)
-                           .where.not(status: "cancelled")
-                           .exists?
+  # Un mismo estilista no puede tener dos turnos activos que se superpongan,
+  # teniendo en cuenta la duración de los servicios de cada uno.
+  def stylist_must_be_available
+    return if stylist.blank? || scheduled_at.blank? || ACTIVE_STATUSES.exclude?(status)
+
+    finish = scheduled_at + blocked_minutes.minutes
+    conflict = stylist.busy_ranges(scheduled_at, except: id)
+                      .any? { |range| range.begin < finish && scheduled_at < range.end }
 
     errors.add(:scheduled_at, "el estilista ya tiene un turno en ese horario") if conflict
+  end
+
+  # Lunes a sábado, dentro del horario de atención y en bloques de SLOT_MINUTES.
+  def must_fit_business_hours
+    return if scheduled_at.blank?
+
+    time = scheduled_at.in_time_zone
+    opening = time.change(hour: Stylist::OPENING_HOUR)
+    closing = time.change(hour: Stylist::CLOSING_HOUR)
+
+    if time.sunday?
+      errors.add(:scheduled_at, "debe ser de lunes a sábado")
+    elsif time < opening || time + blocked_minutes.minutes > closing
+      errors.add(:scheduled_at, "debe estar dentro del horario de atención (#{Stylist::OPENING_HOUR} a #{Stylist::CLOSING_HOUR} hs)")
+    elsif (time.min % Stylist::SLOT_MINUTES).nonzero? || time.sec.nonzero?
+      errors.add(:scheduled_at, "debe coincidir con un bloque de #{Stylist::SLOT_MINUTES} minutos")
+    end
   end
 
   def scheduled_at_cannot_be_in_the_past

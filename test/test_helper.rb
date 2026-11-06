@@ -12,6 +12,12 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    # Día hábil (lunes a sábado) a `days` días de hoy, a la hora indicada. Evita
+    # que los tests fallen según el día de la semana en que se corren.
+    def business_time(days, hour:, min: 0)
+      date = Date.current + days
+      date += 1 if date.sunday?
+      date.in_time_zone.change(hour: hour, min: min)
+    end
   end
 end

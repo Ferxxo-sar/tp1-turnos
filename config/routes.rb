@@ -39,6 +39,11 @@ Rails.application.routes.draw do
     namespace :v1 do
       post "login" => "sessions#create"
       delete "logout" => "sessions#destroy"
+      post "register" => "registrations#create"
+
+      resource :profile, path: "me", only: %i[show update] do
+        patch :password
+      end
 
       resources :categories, only: %i[index show]
       resources :services, only: %i[index show]
@@ -46,7 +51,11 @@ Rails.application.routes.draw do
         get :availability, on: :member
       end
       resources :appointments, only: %i[index show create] do
-        patch :cancel, on: :member
+        member do
+          patch :cancel
+          patch :reschedule
+          get :availability
+        end
       end
     end
   end

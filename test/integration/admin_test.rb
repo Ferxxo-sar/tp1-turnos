@@ -158,7 +158,7 @@ class AdminTest < ActionDispatch::IntegrationTest
   end
 
   test "crear turno y cambiar su estado" do
-    time = 4.days.from_now.change(hour: 12)
+    time = business_time(4, hour: 12)
     post admin_appointments_path, params: { appointment: {
       client_id: clients(:one).id, stylist_id: stylists(:two).id, scheduled_at: time,
       status: "confirmed", service_ids: [ services(:two).id ]

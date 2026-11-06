@@ -8,9 +8,9 @@ module Api
 
         if client&.authenticate(params[:password].to_s)
           client.regenerate_api_token!
-          render json: { token: client.api_token, client: { id: client.id, name: client.name, email: client.email } }
+          render json: session_json(client)
         else
-          render json: { error: "Email o contraseña incorrectos" }, status: :unauthorized
+          render_error "Email o contraseña incorrectos", :unauthorized
         end
       end
 
